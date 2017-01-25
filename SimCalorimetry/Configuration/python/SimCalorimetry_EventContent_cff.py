@@ -32,10 +32,10 @@ run2_common.toModify( SimCalorimetryFEVTDEBUG.outputCommands, func=lambda output
 run2_common.toModify( SimCalorimetryRAW.outputCommands, func=lambda outputCommands: outputCommands.append('keep *_simHcalUnsuppressedDigis_*_*') )
 
 from Configuration.Eras.Modifier_phase2_common_cff import phase2_common
-phase2_common.toModify( SimCalorimetryFEVTDEBUG.outputCommands, func=lambda outputCommands: outputCommands.append('keep EBDigiCollection_mix_*_*') )
-phase2_common.toModify( SimCalorimetryFEVTDEBUG.outputCommands, func=lambda outputCommands: outputCommands.append('keep EEDigiCollection_mix_*_*') )
-phase2_common.toModify( SimCalorimetryRAW.outputCommands, func=lambda outputCommands: outputCommands.append('keep EBDigiCollection_mix_*_*') )
-phase2_common.toModify( SimCalorimetryRAW.outputCommands, func=lambda outputCommands: outputCommands.append('keep EEDigiCollection_mix_*_*') )
+phase2_common.toModify( SimCalorimetryFEVTDEBUG.outputCommands, func=lambda outputCommands: outputCommands.append('keep EBDigiCollection_simEcalUnsuppressedDigis_*_*') )
+phase2_common.toModify( SimCalorimetryFEVTDEBUG.outputCommands, func=lambda outputCommands: outputCommands.append('keep EEDigiCollection_simEcalUnsuppressedDigis_*_*') )
+phase2_common.toModify( SimCalorimetryRAW.outputCommands, func=lambda outputCommands: outputCommands.append('keep EBDigiCollection_simEcalUnsuppressedDigis_*_*') )
+phase2_common.toModify( SimCalorimetryRAW.outputCommands, func=lambda outputCommands: outputCommands.append('keep EEDigiCollection_simEcalUnsuppressedDigis_*_*') )
 
 from Configuration.Eras.Modifier_phase2_timing_cff import phase2_timing
 phase2_timing.toModify(SimCalorimetryFEVTDEBUG.outputCommands, func=lambda outputCommands: outputCommands.append('keep *_mix_EETimeDigi_*') )

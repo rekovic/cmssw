@@ -251,6 +251,17 @@ AODSIMEventContent = cms.PSet(
 )
 #
 #
+# AODSIML1TCALIB Data Tier definition
+#
+#
+AODSIML1TCALIBEventContent = cms.PSet(
+    outputCommands = cms.untracked.vstring('drop *'),
+    eventAutoFlushCompressedSize=cms.untracked.int32(15*1024*1024),
+    compressionAlgorithm=cms.untracked.string("LZMA"),
+    compressionLevel=cms.untracked.int32(4)
+)
+#
+#
 # FEVT Data Tier definition
 #
 #
@@ -593,6 +604,17 @@ AODSIMEventContent.outputCommands.extend(RecoGenJetsAOD.outputCommands)
 AODSIMEventContent.outputCommands.extend(RecoGenMETAOD.outputCommands)
 AODSIMEventContent.outputCommands.extend(SimGeneralAOD.outputCommands)
 AODSIMEventContent.outputCommands.extend(MEtoEDMConverterAOD.outputCommands)
+
+AODSIML1TCALIBEventContent.outputCommands.extend(RecoJetsAOD.outputCommands)
+AODSIML1TCALIBEventContent.outputCommands.extend(GeneratorInterfaceAOD.outputCommands)
+AODSIML1TCALIBEventContent.outputCommands.extend(SimG4CoreAOD.outputCommands)
+#AODSIML1TCALIBEventContent.outputCommands.extend(SimTrackerAOD.outputCommands)
+#AODSIML1TCALIBEventContent.outputCommands.extend(SimMuonAOD.outputCommands)
+AODSIML1TCALIBEventContent.outputCommands.extend(SimCalorimetryAOD.outputCommands)
+AODSIML1TCALIBEventContent.outputCommands.extend(RecoGenJetsAOD.outputCommands)
+AODSIML1TCALIBEventContent.outputCommands.extend(RecoGenMETAOD.outputCommands)
+AODSIML1TCALIBEventContent.outputCommands.extend(SimGeneralAOD.outputCommands)
+AODSIML1TCALIBEventContent.outputCommands.extend(MEtoEDMConverterAOD.outputCommands)
 
 RAWRECOSIMHLTEventContent.outputCommands.extend(RAWRECOEventContent.outputCommands)
 RAWRECOSIMHLTEventContent.outputCommands.extend(GeneratorInterfaceRECO.outputCommands)

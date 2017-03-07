@@ -109,27 +109,27 @@ upgradeProperties[2023] = {
     '2023D7' : {
         'Geom' : 'Extended2023D7',
         'GT' : 'auto:phase2_realistic',
-        'HLTmenu': '@fake',
+        'HLTmenu': '@fake2',
         'Era' : 'Phase2C1',
         'ScenToRun' : ['GenSimHLBeamSpotFull','DigiFullTrigger','RecoFullGlobal','HARVESTFullGlobal'],
     },
     '2023D2' : {
         'Geom' : 'Extended2023D2',
         'GT' : 'auto:phase2_realistic',
-        'HLTmenu': '@fake',
+        'HLTmenu': '@fake2',
         'Era' : 'Phase2C1',
         'ScenToRun' : ['GenSimHLBeamSpotFull','DigiFullTrigger','RecoFullGlobal','HARVESTFullGlobal'],
     },
     '2023D4' : {
         'Geom' : 'Extended2023D4',
-        'HLTmenu': '@fake',
+        'HLTmenu': '@fake2',
         'GT' : 'auto:phase2_realistic',
         'Era' : 'Phase2C2',
         'ScenToRun' : ['GenSimHLBeamSpotFull','DigiFullTrigger','RecoFullGlobal', 'HARVESTFullGlobal'],
     },
     '2023D8' : {
         'Geom' : 'Extended2023D8',
-        'HLTmenu': '@fake',
+        'HLTmenu': '@fake2',
         'GT' : 'auto:phase2_realistic',
         'Era' : 'Phase2C2_timing_layer',
         'ScenToRun' : ['GenSimHLBeamSpotFull','DigiFullTrigger','RecoFullGlobal', 'HARVESTFullGlobal'],
@@ -137,8 +137,15 @@ upgradeProperties[2023] = {
     '2023D9' : {
         'Geom' : 'Extended2023D9',
         'GT' : 'auto:phase2_realistic',
-        'HLTmenu': '@fake',
+        'HLTmenu': '@fake2',
         'Era' : 'Phase2C1',
+        'ScenToRun' : ['GenSimHLBeamSpotFull','DigiFullTrigger','RecoFullGlobal', 'HARVESTFullGlobal'],
+    },
+    '2023D11' : {
+        'Geom' : 'Extended2023D11',
+        'HLTmenu': '@fake2',
+        'GT' : 'auto:phase2_realistic',
+        'Era' : 'Phase2C2',
         'ScenToRun' : ['GenSimHLBeamSpotFull','DigiFullTrigger','RecoFullGlobal', 'HARVESTFullGlobal'],
     }
 

@@ -16,7 +16,11 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
    # Set to do test run on official Phase-2 L1T Ntuples
-   fileNames = cms.untracked.vstring('file:root://eoscms//eos/cms/store/group/dpg_trigger/comm_trigger/L1Trigger/rekovic/PhaseIIFall16DR82-820_backport_L1TMC_v1.2.2/step2_ZEE_PU200_100ev_FEVTDEBUGHLT_customHigherPtTrackParticles.root')
+   fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/r/rekovic/public/forL1TPhase2/PhaseIIFall16DR82-90X/step2_ZEE-CMSSW_9_0_0-PU200-CMSSW_9_0_0_1ev_FEVTDEBUGHLT_customHigherPtTrackParticles.root')
+   #fileNames = cms.untracked.vstring('file:root://eoscms//eos/cms/store/group/dpg_trigger/comm_trigger/L1Trigger/rekovic/PhaseIIFall16DR82-820_backport_L1TMC_v1.2.2/step2_ZEE_PU200_100ev_FEVTDEBUGHLT_customHigherPtTrackParticles.root')
+   #fileNames = cms.untracked.vstring('file:root://eoscms//eos/cms/store/group/dpg_trigger/comm_trigger/L1Trigger/rekovic/PhaseIIFall16DR82-CMSSW_9_0_0/step2_ZEE_PU200_10ev_FEVTDEBUGHLT_customHigherPtTrackParticles.root')
+   #fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/r/rekovic/release/CMSSW_9_0_0/src/step2_ZEE_PU200_10ev_FEVTDEBUGHLT_customHigherPtTrackParticles.root')
+   #fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/r/rekovic/release/CMSSW_9_0_0/src/step2_ZEE-CMSSW_9_0_0-PU200-CMSSW_9_0_0_1ev_FEVTDEBUGHLT_customHigherPtTrackParticles.root')
 )
 
 # All this stuff just runs the various EG algorithms that we are studying
@@ -30,6 +34,36 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 process.load('Configuration.Geometry.GeometryExtended2023D4Reco_cff') # Geom preferred by Phase-2 L1Trig
 process.load('Configuration.StandardSequences.MagneticField_38T_PostLS1_cff')
 
+
+
+
+process.HcalHardcodeGeometryEP = cms.ESProducer("HcalHardcodeGeometryEP",
+    UseOldLoader = cms.bool(False)
+)
+
+
+process.HcalTPGCoderULUT = cms.ESProducer("HcalTPGCoderULUT",
+    FGLUTs = cms.FileInPath('CalibCalorimetry/HcalTPGAlgos/data/HBHE_FG_LUT.dat'),
+    LUTGenerationMode = cms.bool(True),
+    MaskBit = cms.int32(32768),
+    RCalibFile = cms.FileInPath('CalibCalorimetry/HcalTPGAlgos/data/RecHit-TPG-calib.dat'),
+    inputLUTs = cms.FileInPath('CalibCalorimetry/HcalTPGAlgos/data/inputLUTcoder_physics.dat'),
+    read_Ascii_LUTs = cms.bool(False),
+    read_FG_LUTs = cms.bool(False),
+    read_XML_LUTs = cms.bool(False)
+)
+
+
+process.HcalTrigTowerGeometryESProducer = cms.ESProducer("HcalTrigTowerGeometryESProducer")
+
+process.CaloGeometryBuilder = cms.ESProducer("CaloGeometryBuilder",
+    SelectedCalos = cms.vstring('HCAL', 
+        'ZDC', 
+        'EcalBarrel', 
+        'TOWER', 
+        'HGCalEESensitive', 
+        'HGCalHESiliconSensitive')
+)
 
 
 # --------------------------------------------------------------------------------------------

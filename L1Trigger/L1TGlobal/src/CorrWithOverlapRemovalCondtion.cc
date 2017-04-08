@@ -27,7 +27,7 @@
  *      - Loop over all objects of leg3 (overlap-removal leg)
  *        - Retrive its coodrinates, and do conversions depending on the types
  *        - Check for matching with any overlap-removal object.  
- *      - If metched with any overlap object, next leg1 object.
+ *      - If metched with any overlap object, next leg2 object.
  *      - Check for dEta, dPhi, dR, and mass (and charge) correlation with 1st leg object. 
  *        If any correlation cut pass, save leg1-leg2 object combination.
  *    - End loop leg2

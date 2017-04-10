@@ -436,9 +436,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
     }
 
     // since we have two good legs and overlap-removal let, get the correlation parameters
-    CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalParameter corrPar =
-        *(m_gtCorrelationWithOverlapRemovalTemplate->correlationParameter());
-
+    CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalParameter corrPar = *(m_gtCorrelationWithOverlapRemovalTemplate->correlationParameter());
 
     // vector to store the indices of the calorimeter objects
     // from the combination evaluated in the condition
@@ -496,14 +494,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
 // Determine the number of phi bins to get cutoff at pi
     int phiBound = 0;
     if(cond0Categ == CondMuon || cond1Categ == CondMuon || cond2Categ == CondMuon) {
-        GlobalScales::ScaleParameters par = m_gtScales->getMUScales();
-        //phiBound = par.phiBins.size()/2;
-	phiBound = (int)((par.phiMax - par.phiMin)/par.phiStep)/2;
+      GlobalScales::ScaleParameters par = m_gtScales->getMUScales();
+      //phiBound = par.phiBins.size()/2;
+      phiBound = (int)((par.phiMax - par.phiMin)/par.phiStep)/2;
     } else {
-        //Assumes all calorimeter objects are on same phi scale
-        GlobalScales::ScaleParameters par = m_gtScales->getEGScales();
-        //phiBound = par.phiBins.size()/2;
-	phiBound = (int)((par.phiMax - par.phiMin)/par.phiStep)/2;
+      //Assumes all calorimeter objects are on same phi scale
+      GlobalScales::ScaleParameters par = m_gtScales->getEGScales();
+      //phiBound = par.phiBins.size()/2;
+      phiBound = (int)((par.phiMax - par.phiMin)/par.phiStep)/2;
     }	
     LogDebug("L1TGlobal") << "Phi Bound = " << phiBound << std::endl;
     
@@ -515,14 +513,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
 
 
     LogTrace("L1TGlobal")
-            << "  Sub-condition 0: std::vector<SingleCombInCond> size: "
-            << (cond0Comb.size()) << std::endl;
+      << "  Sub-condition 0: std::vector<SingleCombInCond> size: "
+      << (cond0Comb.size()) << std::endl;
     LogTrace("L1TGlobal")
-            << "  Sub-condition 1: std::vector<SingleCombInCond> size: "
-            << (cond1Comb.size()) << std::endl;
+      << "  Sub-condition 1: std::vector<SingleCombInCond> size: "
+      << (cond1Comb.size()) << std::endl;
     LogTrace("L1TGlobal")
-            << "  Sub-condition 2: std::vector<SingleCombInCond> size: "
-            << (cond2Comb.size()) << std::endl;
+      << "  Sub-condition 2: std::vector<SingleCombInCond> size: "
+      << (cond2Comb.size()) << std::endl;
     
 
     // ///////////////////////////////////////////////////////////////////////////////////////////
@@ -533,1306 +531,1297 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
     // ///////////////////////////////////////////////////////////////////////////////////////////
     for (std::vector<SingleCombInCond>::const_iterator it0Comb = cond0Comb.begin(); it0Comb != cond0Comb.end(); it0Comb++) {
 
-        // Type1s: there is 1 object only, no need for a loop, index 0 should be OK in (*it0Comb)[0]
-        // ... but add protection to not crash
-        int obj0Index = -1;
+      // Type1s: there is 1 object only, no need for a loop, index 0 should be OK in (*it0Comb)[0]
+      // ... but add protection to not crash
+      int obj0Index = -1;
 
-        if ((*it0Comb).size() > 0) {
-            obj0Index = (*it0Comb)[0];
-        } else {
-            LogTrace("L1TGlobal")
-                    << "\n  SingleCombInCond (*it0Comb).size() "
-                    << ((*it0Comb).size()) << std::endl;
-            return false;
+      if ((*it0Comb).size() > 0) {
+        obj0Index = (*it0Comb)[0];
+      } else {
+        LogTrace("L1TGlobal")
+        << "\n  SingleCombInCond (*it0Comb).size() "
+        << ((*it0Comb).size()) << std::endl;
+        return false;
+      }
+
+      // Collect the information on the first leg of the correlation
+      switch (cond0Categ) {
+        case CondMuon: {
+          lutObj0 = "MU";
+          candMuVec = m_uGtB->getCandL1Mu();
+          phiIndex0 =  (candMuVec->at(bxEval,obj0Index))->hwPhi(); //(*candMuVec)[obj0Index]->phiIndex();
+          etaIndex0 =  (candMuVec->at(bxEval,obj0Index))->hwEta();
+          etIndex0  =  (candMuVec->at(bxEval,obj0Index))->hwPt();
+          chrg0     =  (candMuVec->at(bxEval,obj0Index))->hwCharge();
+          int etaBin0 = etaIndex0;
+          if(etaBin0<0) etaBin0 = m_gtScales->getMUScales().etaBins.size() + etaBin0; //twos complement		
+          //		LogDebug("L1TGlobal") << "Muon phi" << phiIndex0 << " eta " << etaIndex0 << " etaBin0 = " << etaBin0  << " et " << etIndex0 << std::endl;
+          //
+		
+          etBin0 = etIndex0;
+          int ssize = m_gtScales->getMUScales().etBins.size();
+          if (etBin0 >= ssize){ 
+            etBin0 = ssize-1; 			  
+            LogTrace("L1TGlobal") 
+            << "muon0 hw et" << etBin0 << " out of scale range.  Setting to maximum.";
+          } 
+		
+          // Determine Floating Pt numbers for floating point caluclation
+          std::pair<double, double> binEdges = m_gtScales->getMUScales().phiBins.at(phiIndex0);
+          phi0Phy = 0.5*(binEdges.second + binEdges.first);
+          binEdges = m_gtScales->getMUScales().etaBins.at(etaBin0);
+          eta0Phy = 0.5*(binEdges.second + binEdges.first);		
+          binEdges = m_gtScales->getMUScales().etBins.at(etBin0);
+          et0Phy = 0.5*(binEdges.second + binEdges.first);
+          
+          LogDebug("L1TGlobal") << "Found all quantities for the muon 0" << std::endl;		
         }
+          break;
 
-// Collect the information on the first leg of the correlation
-        switch (cond0Categ) {
-            case CondMuon: {
-	        lutObj0 = "MU";
-                candMuVec = m_uGtB->getCandL1Mu();
-                phiIndex0 =  (candMuVec->at(bxEval,obj0Index))->hwPhi(); //(*candMuVec)[obj0Index]->phiIndex();
-                etaIndex0 =  (candMuVec->at(bxEval,obj0Index))->hwEta();
-		etIndex0  =  (candMuVec->at(bxEval,obj0Index))->hwPt();
-		chrg0     =  (candMuVec->at(bxEval,obj0Index))->hwCharge();
-		int etaBin0 = etaIndex0;
-		if(etaBin0<0) etaBin0 = m_gtScales->getMUScales().etaBins.size() + etaBin0; //twos complement		
-//		LogDebug("L1TGlobal") << "Muon phi" << phiIndex0 << " eta " << etaIndex0 << " etaBin0 = " << etaBin0  << " et " << etIndex0 << std::endl;
-		
-		etBin0 = etIndex0;
-		int ssize = m_gtScales->getMUScales().etBins.size();
-		if (etBin0 >= ssize){ 
-		  etBin0 = ssize-1; 			  
-		  LogTrace("L1TGlobal") 
-		    << "muon0 hw et" << etBin0 << " out of scale range.  Setting to maximum.";
-		} 
-		
-		// Determine Floating Pt numbers for floating point caluclation
-		std::pair<double, double> binEdges = m_gtScales->getMUScales().phiBins.at(phiIndex0);
-		phi0Phy = 0.5*(binEdges.second + binEdges.first);
-		binEdges = m_gtScales->getMUScales().etaBins.at(etaBin0);
-		eta0Phy = 0.5*(binEdges.second + binEdges.first);		
-		binEdges = m_gtScales->getMUScales().etBins.at(etBin0);
-		et0Phy = 0.5*(binEdges.second + binEdges.first);
+        // Calorimeter Objects (EG, Jet, Tau)
+          case CondCalo: {
+            switch(cndObjTypeVec[0]) {
+              case gtEG: {
+                lutObj0 = "EG";
+                candCaloVec = m_uGtB->getCandL1EG();
+                phiIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwPhi();
+                etaIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwEta();
+                etIndex0  =  (candCaloVec->at(bxEval,obj0Index))->hwPt();
+                etaBin0   = etaIndex0;
+                if(etaBin0<0) etaBin0 = m_gtScales->getEGScales().etaBins.size() + etaBin0;
+                //		    LogDebug("L1TGlobal") << "EG0 phi" << phiIndex0 << " eta " << etaIndex0 << " etaBin0 = " << etaBin0 << " et " << etIndex0 << std::endl;
 
-		LogDebug("L1TGlobal") << "Found all quantities for the muon 0" << std::endl;		
-            }
+                etBin0 = etIndex0;
+                int ssize = m_gtScales->getEGScales().etBins.size();
+                if (etBin0 >= ssize){ 
+                  etBin0 = ssize-1; 			  
+                  LogTrace("L1TGlobal") 
+                  << "EG0 hw et" << etBin0 << " out of scale range.  Setting to maximum.";
+                } 
+
+                // Determine Floating Pt numbers for floating point caluclation
+                std::pair<double, double> binEdges = m_gtScales->getEGScales().phiBins.at(phiIndex0);
+                phi0Phy = 0.5*(binEdges.second + binEdges.first);
+                binEdges = m_gtScales->getEGScales().etaBins.at(etaBin0);
+                eta0Phy = 0.5*(binEdges.second + binEdges.first);		
+                binEdges = m_gtScales->getEGScales().etBins[etBin0];
+                et0Phy = 0.5*(binEdges.second + binEdges.first);
+
+              }
                 break;
+              case gtJet: {
+                lutObj0 = "JET";
+                candCaloVec = m_uGtB->getCandL1Jet();
+                phiIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwPhi();
+                etaIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwEta();
+                etIndex0  =  (candCaloVec->at(bxEval,obj0Index))->hwPt();
+                etaBin0 = etaIndex0;
+                if(etaBin0<0) etaBin0 = m_gtScales->getJETScales().etaBins.size() + etaBin0;
+                
+                etBin0 = etIndex0;
+                int ssize = m_gtScales->getJETScales().etBins.size();
+                if (etBin0 >= ssize){ 
+                  //edm::LogWarning("L1TGlobal") 
+                  //<< "jet0 hw et" << etBin0 << " out of scale range.  Setting to maximum.";
+                  etBin0 = ssize-1; 			  
+                } 
 
-// Calorimeter Objects (EG, Jet, Tau)
-            case CondCalo: {
-	       
-               switch(cndObjTypeVec[0]) {
-	         case gtEG: {
-		    lutObj0 = "EG";
-		    candCaloVec = m_uGtB->getCandL1EG();
-		    phiIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwPhi();
-		    etaIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwEta();
-		    etIndex0  =  (candCaloVec->at(bxEval,obj0Index))->hwPt();
-		    etaBin0   = etaIndex0;
-		    if(etaBin0<0) etaBin0 = m_gtScales->getEGScales().etaBins.size() + etaBin0;
-//		    LogDebug("L1TGlobal") << "EG0 phi" << phiIndex0 << " eta " << etaIndex0 << " etaBin0 = " << etaBin0 << " et " << etIndex0 << std::endl;
+                // Determine Floating Pt numbers for floating point caluclation
+                std::pair<double, double> binEdges = m_gtScales->getJETScales().phiBins.at(phiIndex0);
+                phi0Phy = 0.5*(binEdges.second + binEdges.first);			
+                binEdges = m_gtScales->getJETScales().etaBins.at(etaBin0);
+                eta0Phy = 0.5*(binEdges.second + binEdges.first);		
+                binEdges = m_gtScales->getJETScales().etBins.at(etBin0);
+                et0Phy = 0.5*(binEdges.second + binEdges.first);
 
-                    etBin0 = etIndex0;
-		    int ssize = m_gtScales->getEGScales().etBins.size();
-		    if (etBin0 >= ssize){ 
-		      etBin0 = ssize-1; 			  
-		      LogTrace("L1TGlobal") 
-			<< "EG0 hw et" << etBin0 << " out of scale range.  Setting to maximum.";
-		    } 
-	    
-		    // Determine Floating Pt numbers for floating point caluclation
-		    std::pair<double, double> binEdges = m_gtScales->getEGScales().phiBins.at(phiIndex0);
-		    phi0Phy = 0.5*(binEdges.second + binEdges.first);					    
-		    binEdges = m_gtScales->getEGScales().etaBins.at(etaBin0);
-		    eta0Phy = 0.5*(binEdges.second + binEdges.first);		
-		    binEdges = m_gtScales->getEGScales().etBins[etBin0];
-		    et0Phy = 0.5*(binEdges.second + binEdges.first);
-		    
-		 }
-		   break;
-		 case gtJet: {
-		    lutObj0 = "JET";
-		    candCaloVec = m_uGtB->getCandL1Jet();
-		    phiIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwPhi();
-		    etaIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwEta();
-		    etIndex0  =  (candCaloVec->at(bxEval,obj0Index))->hwPt();
-		    etaBin0 = etaIndex0;
-		    if(etaBin0<0) etaBin0 = m_gtScales->getJETScales().etaBins.size() + etaBin0;
+              }
+                break;
+              case gtTau: {
+                candCaloVec = m_uGtB->getCandL1Tau();
+                phiIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwPhi();
+                etaIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwEta();
+                etIndex0  =  (candCaloVec->at(bxEval,obj0Index))->hwPt();
+                etaBin0 = etaIndex0;
+                if(etaBin0<0) etaBin0 = m_gtScales->getTAUScales().etaBins.size() + etaBin0;
+                
+                etBin0 = etIndex0;
+                int ssize = m_gtScales->getTAUScales().etBins.size();
+                if (etBin0 >= ssize){ 		      
+                  etBin0 = ssize-1; 			  
+                  LogTrace("L1TGlobal") 
+                  << "tau0 hw et" << etBin0 << " out of scale range.  Setting to maximum.";
+                } 
 
-		    etBin0 = etIndex0;
-		    int ssize = m_gtScales->getJETScales().etBins.size();
-		    if (etBin0 >= ssize){ 
-		      //edm::LogWarning("L1TGlobal") 
-		      //<< "jet0 hw et" << etBin0 << " out of scale range.  Setting to maximum.";
-		      etBin0 = ssize-1; 			  
-		    } 
-		    
-		    // Determine Floating Pt numbers for floating point caluclation
-		    std::pair<double, double> binEdges = m_gtScales->getJETScales().phiBins.at(phiIndex0);
-		    phi0Phy = 0.5*(binEdges.second + binEdges.first);			
-		    binEdges = m_gtScales->getJETScales().etaBins.at(etaBin0);
-		    eta0Phy = 0.5*(binEdges.second + binEdges.first);		
-		    binEdges = m_gtScales->getJETScales().etBins.at(etBin0);
-		    et0Phy = 0.5*(binEdges.second + binEdges.first);
-		    
-		 }
-		   break;
-		 case gtTau: {
-		    candCaloVec = m_uGtB->getCandL1Tau();
-		    phiIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwPhi();
-		    etaIndex0 =  (candCaloVec->at(bxEval,obj0Index))->hwEta();
-		    etIndex0  =  (candCaloVec->at(bxEval,obj0Index))->hwPt();
-		    etaBin0 = etaIndex0;
-		    if(etaBin0<0) etaBin0 = m_gtScales->getTAUScales().etaBins.size() + etaBin0;
-		    
-		    etBin0 = etIndex0;
-		    int ssize = m_gtScales->getTAUScales().etBins.size();
-		    if (etBin0 >= ssize){ 		      
-		      etBin0 = ssize-1; 			  
-		      LogTrace("L1TGlobal") 
-			<< "tau0 hw et" << etBin0 << " out of scale range.  Setting to maximum.";
-		    } 
-
-		    
-		    // Determine Floating Pt numbers for floating point caluclation
-		    std::pair<double, double> binEdges = m_gtScales->getTAUScales().phiBins.at(phiIndex0);
-		    phi0Phy = 0.5*(binEdges.second + binEdges.first);
-		    binEdges = m_gtScales->getTAUScales().etaBins.at(etaBin0);
-		    eta0Phy = 0.5*(binEdges.second + binEdges.first);		
-		    binEdges = m_gtScales->getTAUScales().etBins.at(etBin0);
-		    et0Phy = 0.5*(binEdges.second + binEdges.first);		    			
-		    lutObj0 = "TAU";
-		 }
-	           break;
-		 default: {
-		 }  
-	           break;
-	       } //end switch on calo type.
+                // Determine Floating Pt numbers for floating point caluclation
+                std::pair<double, double> binEdges = m_gtScales->getTAUScales().phiBins.at(phiIndex0);
+                phi0Phy = 0.5*(binEdges.second + binEdges.first);
+                binEdges = m_gtScales->getTAUScales().etaBins.at(etaBin0);
+                eta0Phy = 0.5*(binEdges.second + binEdges.first);		
+                binEdges = m_gtScales->getTAUScales().etBins.at(etBin0);
+                et0Phy = 0.5*(binEdges.second + binEdges.first);
+                lutObj0 = "TAU";
+              }
+	              break;
+              default: {
+              }  
+                break;
+            } //end switch on calo type.
 		
-                 phiORIndex0 = phiIndex0;
-                 etaORIndex0 = etaIndex0;
-                 
-                //If needed convert calo scales to muon scales for comparison
+            phiORIndex0 = phiIndex0;
+            etaORIndex0 = etaIndex0;
+
+            //If needed convert calo scales to muon scales for comparison
+            if(convertCaloScales) {
+              std::string lutName = lutObj0;
+              lutName += "-MU";
+              long long tst = m_gtScales->getLUT_CalMuEta(lutName,etaBin0);
+              LogDebug("L1TGlobal") << lutName <<"  EtaCal = " << etaIndex0 << " etaBin0 = " << etaBin0 << " EtaMu = " << tst << std::endl; 
+              etaIndex0 = tst;
+              tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex0);
+              LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex0 << " PhiMu = " << tst << std::endl;
+              phiIndex0 = tst;
+            }
+
+            //If needed convert calo scales to muon scales for comparison
+            if(convertCaloScalesForOverlapRemovalFromLeg0) {
+              phiORIndex0 = phiIndex0;
+             etaORIndex0 = etaIndex0;
+		   		  
+            }
+ 
+          }
+                break;
+		
+          // Energy Sums		
+          case CondEnergySum: {
+
+            etSumCond = true;
+            //Stupid mapping between enum types for energy sums.
+            l1t::EtSum::EtSumType type;
+
+            switch( cndObjTypeVec[0] ){
+            case gtETM:
+              type = l1t::EtSum::EtSumType::kMissingEt;
+              lutObj0 = "ETM";
+              break;
+            case gtETT:
+              type = l1t::EtSum::EtSumType::kTotalEt;
+              lutObj0 = "ETT"; 
+              break;
+            case gtETTem:
+              type = l1t::EtSum::EtSumType::kTotalEtEm;
+              lutObj0 = "ETTem"; //should this be just ETT (share LUTs?) Can't be used for CorrCond anyway since now directional information
+              break;		  
+            case gtHTM:
+              type = l1t::EtSum::EtSumType::kMissingHt;
+              lutObj0 = "HTM";
+              break;
+            case gtHTT:
+              type = l1t::EtSum::EtSumType::kTotalHt;
+              lutObj0 = "HTT";
+              break;
+            case gtETMHF:
+              type = l1t::EtSum::EtSumType::kMissingEtHF;
+              lutObj0 = "ETMHF"; 
+              break;
+            case gtMinBiasHFP0:
+            case gtMinBiasHFM0:
+            case gtMinBiasHFP1:
+            case gtMinBiasHFM1:
+              type = l1t::EtSum::EtSumType::kMinBiasHFP0;
+              lutObj0 = "MinBias"; //??Fix?? Not a valid LUT type Can't be used for CorrCond anyway since now directional information
+              break;
+            default:
+              edm::LogError("L1TGlobal")
+                << "\n  Error: "
+                << "Unmatched object type from template to EtSumType, cndObjTypeVec[0] = "
+                << cndObjTypeVec[0]
+                << std::endl;
+              type = l1t::EtSum::EtSumType::kTotalEt;
+              break;
+            }
+
+            candEtSumVec = m_uGtB->getCandL1EtSum();
+		
+            for( int iEtSum=0; iEtSum < (int)candEtSumVec->size(bxEval); iEtSum++) {
+              if( (candEtSumVec->at(bxEval,iEtSum))->getType() == type ) {
+                phiIndex0 =  (candEtSumVec->at(bxEval,iEtSum))->hwPhi();
+                etaIndex0 =  (candEtSumVec->at(bxEval,iEtSum))->hwEta();
+                etIndex0  =  (candEtSumVec->at(bxEval,iEtSum))->hwPt(); 
+
+                //  Get the floating point numbers
+                if(cndObjTypeVec[0] == gtETM ) {
+                  std::pair<double, double> binEdges = m_gtScales->getETMScales().phiBins.at(phiIndex0);
+                  phi0Phy = 0.5*(binEdges.second + binEdges.first);
+                  eta0Phy = 0.; //No Eta for Energy Sums
+                  
+                  etBin0 = etIndex0;
+                  int ssize = m_gtScales->getETMScales().etBins.size();
+                  assert(ssize > 0);
+                  if (etBin0 >= ssize){ etBin0 = ssize-1; } 			   
+                  
+                  binEdges = m_gtScales->getETMScales().etBins.at(etBin0);
+                  et0Phy = 0.5*(binEdges.second + binEdges.first);
+                } else if (cndObjTypeVec[0] == gtHTM) {
+                  std::pair<double, double> binEdges = m_gtScales->getHTMScales().phiBins.at(phiIndex0);
+                  phi0Phy = 0.5*(binEdges.second + binEdges.first);
+                  eta0Phy = 0.; //No Eta for Energy Sums
+                  
+                  etBin0 = etIndex0;
+                  int ssize = m_gtScales->getHTMScales().etBins.size();
+                  assert(ssize > 0);
+                  if (etBin0 >= ssize){ etBin0 = ssize-1; } 			   
+                
+                  binEdges = m_gtScales->getHTMScales().etBins.at(etBin0);
+                  et0Phy = 0.5*(binEdges.second + binEdges.first);
+                } else if (cndObjTypeVec[0] == gtETMHF) {
+                  std::pair<double, double> binEdges = m_gtScales->getETMHFScales().phiBins.at(phiIndex0);
+                  phi0Phy = 0.5*(binEdges.second + binEdges.first);
+                  eta0Phy = 0.; //No Eta for Energy Sums
+                  
+                  etBin0 = etIndex0;
+                  int ssize = m_gtScales->getETMHFScales().etBins.size();
+                  assert(ssize > 0);
+                  if (etBin0 >= ssize){ etBin0 = ssize-1; } 			   
+                
+                  binEdges = m_gtScales->getETMHFScales().etBins.at(etBin0);
+                  et0Phy = 0.5*(binEdges.second + binEdges.first);
+                } 
+
+                phiORIndex0 = phiIndex0;
+                etaORIndex0 = etaIndex0;
+
+                //If needed convert calo scales to muon scales for comparison (only phi for energy sums)
                 if(convertCaloScales) {
-		  std::string lutName = lutObj0;
-		  lutName += "-MU";
-		  long long tst = m_gtScales->getLUT_CalMuEta(lutName,etaBin0);
-		  LogDebug("L1TGlobal") << lutName <<"  EtaCal = " << etaIndex0 << " etaBin0 = " << etaBin0 << " EtaMu = " << tst << std::endl; 
-		  etaIndex0 = tst;
-		  
-
-		  tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex0);
-		  LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex0 << " PhiMu = " << tst << std::endl;
-		  phiIndex0 = tst;
-		   		  
+                  std::string lutName = lutObj0;
+                  lutName += "-MU";
+                  long long tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex0);
+                  LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex0 << " PhiMu = " << tst << std::endl;
+                  phiIndex0 = tst;
                 }
 
-                //If needed convert calo scales to muon scales for comparison
+                //If needed convert calo scales to muon scales for comparison (only phi for energy sums)
                 if(convertCaloScalesForOverlapRemovalFromLeg0) {
-                   phiORIndex0 = phiIndex0;
-                   etaORIndex0 = etaIndex0;
+                  phiORIndex0 = phiIndex0;
 		   		  
                 }
  
-            }
-                break;
+              } //check it is the EtSum we want   
+            } // loop over Etsums
 		
-// Energy Sums		
-            case CondEnergySum: {
-
-                etSumCond = true;
-		//Stupid mapping between enum types for energy sums.
-		l1t::EtSum::EtSumType type;
-		switch( cndObjTypeVec[0] ){
-		case gtETM:
-		  type = l1t::EtSum::EtSumType::kMissingEt;
-		  lutObj0 = "ETM";
-		  break;
-		case gtETT:
-		  type = l1t::EtSum::EtSumType::kTotalEt;
-		  lutObj0 = "ETT"; 
-		  break;
-		case gtETTem:
-		  type = l1t::EtSum::EtSumType::kTotalEtEm;
-		  lutObj0 = "ETTem"; //should this be just ETT (share LUTs?) Can't be used for CorrCond anyway since now directional information
-		  break;		  
-		case gtHTM:
-		  type = l1t::EtSum::EtSumType::kMissingHt;
-		  lutObj0 = "HTM";
-		  break;
-		case gtHTT:
-		  type = l1t::EtSum::EtSumType::kTotalHt;
-		  lutObj0 = "HTT";
-		  break;
-		case gtETMHF:
-		  type = l1t::EtSum::EtSumType::kMissingEtHF;
-		  lutObj0 = "ETMHF"; 
-		  break;
-		case gtMinBiasHFP0:
-		case gtMinBiasHFM0:
-		case gtMinBiasHFP1:
-		case gtMinBiasHFM1:
-		  type = l1t::EtSum::EtSumType::kMinBiasHFP0;
-		  lutObj0 = "MinBias"; //??Fix?? Not a valid LUT type Can't be used for CorrCond anyway since now directional information
-		  break;
-		default:
-		  edm::LogError("L1TGlobal")
-		    << "\n  Error: "
-		    << "Unmatched object type from template to EtSumType, cndObjTypeVec[0] = "
-		    << cndObjTypeVec[0]
-		    << std::endl;
-		  type = l1t::EtSum::EtSumType::kTotalEt;
-		  break;
-		}
-
-                candEtSumVec = m_uGtB->getCandL1EtSum();
-		
-                for( int iEtSum=0; iEtSum < (int)candEtSumVec->size(bxEval); iEtSum++) {
-		  if( (candEtSumVec->at(bxEval,iEtSum))->getType() == type ) {
-                    phiIndex0 =  (candEtSumVec->at(bxEval,iEtSum))->hwPhi();
-                    etaIndex0 =  (candEtSumVec->at(bxEval,iEtSum))->hwEta();
-		    etIndex0  =  (candEtSumVec->at(bxEval,iEtSum))->hwPt(); 
-
-                    //  Get the floating point numbers
-		    if(cndObjTypeVec[0] == gtETM ) {
-		      std::pair<double, double> binEdges = m_gtScales->getETMScales().phiBins.at(phiIndex0);
-		      phi0Phy = 0.5*(binEdges.second + binEdges.first);
-		      eta0Phy = 0.; //No Eta for Energy Sums
-		      
-		      etBin0 = etIndex0;
-		      int ssize = m_gtScales->getETMScales().etBins.size();
-		      assert(ssize > 0);
-		      if (etBin0 >= ssize){ etBin0 = ssize-1; } 			   
-		      
-		      binEdges = m_gtScales->getETMScales().etBins.at(etBin0);
-		      et0Phy = 0.5*(binEdges.second + binEdges.first);
-		    } else if (cndObjTypeVec[0] == gtHTM) {
-		      std::pair<double, double> binEdges = m_gtScales->getHTMScales().phiBins.at(phiIndex0);
-		      phi0Phy = 0.5*(binEdges.second + binEdges.first);
-		      eta0Phy = 0.; //No Eta for Energy Sums
-		      
-		      etBin0 = etIndex0;
-		      int ssize = m_gtScales->getHTMScales().etBins.size();
-		      assert(ssize > 0);
-		      if (etBin0 >= ssize){ etBin0 = ssize-1; } 			   
-
-		      binEdges = m_gtScales->getHTMScales().etBins.at(etBin0);
-		      et0Phy = 0.5*(binEdges.second + binEdges.first);
-		    } else if (cndObjTypeVec[0] == gtETMHF) {
-		      std::pair<double, double> binEdges = m_gtScales->getETMHFScales().phiBins.at(phiIndex0);
-		      phi0Phy = 0.5*(binEdges.second + binEdges.first);
-		      eta0Phy = 0.; //No Eta for Energy Sums
-		      
-		      etBin0 = etIndex0;
-		      int ssize = m_gtScales->getETMHFScales().etBins.size();
-		      assert(ssize > 0);
-		      if (etBin0 >= ssize){ etBin0 = ssize-1; } 			   
-
-		      binEdges = m_gtScales->getETMHFScales().etBins.at(etBin0);
-		      et0Phy = 0.5*(binEdges.second + binEdges.first);
-		    } 
-
-		    
-                    phiORIndex0 = phiIndex0;
-                    etaORIndex0 = etaIndex0;
-
-                    //If needed convert calo scales to muon scales for comparison (only phi for energy sums)
-                    if(convertCaloScales) {
-
-		       std::string lutName = lutObj0;
-		       lutName += "-MU";
-		       long long tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex0);
-		       LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex0 << " PhiMu = " << tst << std::endl;
-		       phiIndex0 = tst;
-
-                    }
-
-                    //If needed convert calo scales to muon scales for comparison (only phi for energy sums)
-                    if(convertCaloScalesForOverlapRemovalFromLeg0) {
-                       phiORIndex0 = phiIndex0;
-		   		  
-                    }
- 
-                  } //check it is the EtSum we want   
-                } // loop over Etsums
-		
-            }
-                break;
+          } // end case CondEnergySum
+            break;
 		
 		
-            default: {
-                // should not arrive here, there are no correlation conditions defined for this object
-		            LogDebug("L1TGlobal") << "Error could not find the Cond Category for Leg 0" << std::endl;
-                return false;
-            }
-                break;
+          default: {
+            // should not arrive here, there are no correlation conditions defined for this object
+            LogDebug("L1TGlobal") << "Error could not find the Cond Category for Leg 0" << std::endl;
+            return false;
+          }
+            break;
         } //end switch on first leg type
         
         bool overlapRemovalMatchLeg1 = false;
 
         // ///////////////////////////////////////////////////////////////////////////////////////////
-  			// loop over overlap-removal leg combination which produced individually "true" as Type1s 
-  			// ///////////////////////////////////////////////////////////////////////////////////////////
-  			for (std::vector<SingleCombInCond>::const_iterator it2Comb = cond2Comb.begin(); it2Comb != cond2Comb.end(); it2Comb++) {
-  			
-  			    // Type1s: there is 1 object only, no need for a loop, index 0 should be OK in (*it2Comb)[0]
-  			    // ... but add protection to not crash
-  			    int obj2Index = -1;
-  			
-  			    if ((*it2Comb).size() > 0) {
-  			        obj2Index = (*it2Comb)[0];
-  			    } else {
-  			        LogTrace("L1TGlobal")
-  			                << "\n  SingleCombInCond (*it2Comb).size() "
-  			                << ((*it2Comb).size()) << std::endl;
-  			        return false;
-  			    }
-  			
-  			    // Collect the information on the overlap-removal leg 
-  			    switch (cond2Categ) {
-  			        case CondMuon: {
-  			            lutObj2 = "MU";
-  			            candMuVec = m_uGtB->getCandL1Mu();
-  			            phiIndex2 =  (candMuVec->at(bxEval,obj2Index))->hwPhi(); //(*candMuVec)[obj2Index]->phiIndex();
-  			            etaIndex2 =  (candMuVec->at(bxEval,obj2Index))->hwEta();
-  			    	int etaBin2 = etaIndex2;
-  			    	if(etaBin2<0) etaBin2 = m_gtScales->getMUScales().etaBins.size() + etaBin2; //twos complement		
-  			            //LogDebug("L1TGlobal") << "Muon phi" << phiIndex2 << " eta " << etaIndex2 << " etaBin2 = " << etaBin2  << " et " << etIndex2 << std::endl;
-  			    	
-  			    	
-  			    	// Determine Floating Pt numbers for floating point caluclation
-  			    	std::pair<double, double> binEdges = m_gtScales->getMUScales().phiBins.at(phiIndex2);
-  			    	phi2Phy = 0.5*(binEdges.second + binEdges.first);
-  			    	binEdges = m_gtScales->getMUScales().etaBins.at(etaBin2);
-  			    	eta2Phy = 0.5*(binEdges.second + binEdges.first);		
-  			
-  			    	LogDebug("L1TGlobal") << "Found all quantities for the muon 0" << std::endl;		
-  			        }
-  			            break;
-  			
-  			         // Calorimeter Objects (EG, Jet, Tau)
-  			        case CondCalo: {
-  			           
-  			           switch(cndObjTypeVec[0]) {
-  			             case gtEG: {
-  			    	    lutObj2 = "EG";
-  			    	    candCaloVec = m_uGtB->getCandL1EG();
-  			    	    phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
-  			    	    etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
-  			    	    if(etaBin2<0) etaBin2 = m_gtScales->getEGScales().etaBins.size() + etaBin2;
-  			                //LogDebug("L1TGlobal") << "EG0 phi" << phiIndex2 << " eta " << etaIndex2 << " etaBin2 = " << etaBin2 << " et " << etIndex2 << std::endl;
-  			
-  			    	    // Determine Floating Pt numbers for floating point caluclation
-  			    	    std::pair<double, double> binEdges = m_gtScales->getEGScales().phiBins.at(phiIndex2);
-  			    	    phi2Phy = 0.5*(binEdges.second + binEdges.first);					    
-  			    	    binEdges = m_gtScales->getEGScales().etaBins.at(etaBin2);
-  			    	    eta2Phy = 0.5*(binEdges.second + binEdges.first);		
-  			    	    
-  			    	 }
-  			    	   break;
-  			    	 case gtJet: {
-  			    	    lutObj2 = "JET";
-  			    	    candCaloVec = m_uGtB->getCandL1Jet();
-  			    	    phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
-  			    	    etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
-  			    	    etaBin2 = etaIndex2;
-  			    	    if(etaBin2<0) etaBin2 = m_gtScales->getJETScales().etaBins.size() + etaBin2;
-  			
-  			    	    // Determine Floating Pt numbers for floating point caluclation
-  			    	    std::pair<double, double> binEdges = m_gtScales->getJETScales().phiBins.at(phiIndex2);
-  			    	    phi2Phy = 0.5*(binEdges.second + binEdges.first);			
-  			    	    binEdges = m_gtScales->getJETScales().etaBins.at(etaBin2);
-  			    	    eta2Phy = 0.5*(binEdges.second + binEdges.first);		
-  			    	    
-  			    	 }
-  			    	   break;
-  			    	 case gtTau: {
-  			    	    candCaloVec = m_uGtB->getCandL1Tau();
-  			    	    phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
-  			    	    etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
-  			    	    if(etaBin2<0) etaBin2 = m_gtScales->getTAUScales().etaBins.size() + etaBin2;
-  			    	    
-  			    	    // Determine Floating Pt numbers for floating point caluclation
-  			    	    std::pair<double, double> binEdges = m_gtScales->getTAUScales().phiBins.at(phiIndex2);
-  			    	    phi2Phy = 0.5*(binEdges.second + binEdges.first);
-  			    	    binEdges = m_gtScales->getTAUScales().etaBins.at(etaBin2);
-  			    	    eta2Phy = 0.5*(binEdges.second + binEdges.first);		
-  			    	    lutObj2 = "TAU";
-  			    	 }
-  			               break;
-  			    	 default: {
-  			    	 }  
-  			               break;
-  			           } //end switch on calo type.
-  			    	
-  			            //If needed convert calo scales to muon scales for comparison
-  			            if(convertCaloScales) {
-  			    	  std::string lutName = lutObj2;
-  			    	  lutName += "-MU";
-  			    	  long long tst = m_gtScales->getLUT_CalMuEta(lutName,etaBin2);
-  			    	  LogDebug("L1TGlobal") << lutName <<"  EtaCal = " << etaIndex2 << " etaBin2 = " << etaBin2 << " EtaMu = " << tst << std::endl; 
-  			    	  etaIndex2 = tst;
-  			    	  
-  			
-  			    	  tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex2);
-  			    	  LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex2 << " PhiMu = " << tst << std::endl;
-  			    	  phiIndex2 = tst;
-  			    	   		  
-  			            }
-  			
-  			        }
-  			            break;
-  			    	
-  			         // Energy Sums		
-  			        case CondEnergySum: {
-  			
-  			            etSumCond = true;
-  			    	//Stupid mapping between enum types for energy sums.
-  			    	l1t::EtSum::EtSumType type;
-  			    	switch( cndObjTypeVec[0] ){
-  			    	case gtETM:
-  			    	  type = l1t::EtSum::EtSumType::kMissingEt;
-  			    	  lutObj2 = "ETM";
-  			    	  break;
-  			    	case gtETT:
-  			    	  type = l1t::EtSum::EtSumType::kTotalEt;
-  			    	  lutObj2 = "ETT"; 
-  			    	  break;
-  			    	case gtETTem:
-  			    	  type = l1t::EtSum::EtSumType::kTotalEtEm;
-  			    	  lutObj2 = "ETTem"; //should this be just ETT (share LUTs?) Can't be used for CorrCond anyway since now directional information
-  			    	  break;		  
-  			    	case gtHTM:
-  			    	  type = l1t::EtSum::EtSumType::kMissingHt;
-  			    	  lutObj2 = "HTM";
-  			    	  break;
-  			    	case gtHTT:
-  			    	  type = l1t::EtSum::EtSumType::kTotalHt;
-  			    	  lutObj2 = "HTT";
-  			    	  break;
-  			    	case gtETMHF:
-  			    	  type = l1t::EtSum::EtSumType::kMissingEtHF;
-  			    	  lutObj2 = "ETMHF"; 
-  			    	  break;
-  			    	case gtMinBiasHFP0:
-  			    	case gtMinBiasHFM0:
-  			    	case gtMinBiasHFP1:
-  			    	case gtMinBiasHFM1:
-  			    	  type = l1t::EtSum::EtSumType::kMinBiasHFP0;
-  			    	  lutObj2 = "MinBias"; //??Fix?? Not a valid LUT type Can't be used for CorrCond anyway since now directional information
-  			    	  break;
-  			    	default:
-  			    	  edm::LogError("L1TGlobal")
-  			    	    << "\n  Error: "
-  			    	    << "Unmatched object type from template to EtSumType, cndObjTypeVec[0] = "
-  			    	    << cndObjTypeVec[0]
-  			    	    << std::endl;
-  			    	  type = l1t::EtSum::EtSumType::kTotalEt;
-  			    	  break;
-  			    	}
-  			
-  			            candEtSumVec = m_uGtB->getCandL1EtSum();
-  			    	
-  			            for( int iEtSum=0; iEtSum < (int)candEtSumVec->size(bxEval); iEtSum++) {
-  			    	  if( (candEtSumVec->at(bxEval,iEtSum))->getType() == type ) {
-  			                phiIndex2 =  (candEtSumVec->at(bxEval,iEtSum))->hwPhi();
-  			                etaIndex2 =  (candEtSumVec->at(bxEval,iEtSum))->hwEta();
-  			
-  			                //  Get the floating point numbers
-  			    	    if(cndObjTypeVec[0] == gtETM ) {
-  			    	      std::pair<double, double> binEdges = m_gtScales->getETMScales().phiBins.at(phiIndex2);
-  			    	      phi2Phy = 0.5*(binEdges.second + binEdges.first);
-  			    	      eta2Phy = 0.; //No Eta for Energy Sums
-  			    	      
-  			    	    } else if (cndObjTypeVec[0] == gtHTM) {
-  			    	      std::pair<double, double> binEdges = m_gtScales->getHTMScales().phiBins.at(phiIndex2);
-  			    	      phi2Phy = 0.5*(binEdges.second + binEdges.first);
-  			    	      eta2Phy = 0.; //No Eta for Energy Sums
-  			    	      
-  			    	    } else if (cndObjTypeVec[0] == gtETMHF) {
-  			    	      std::pair<double, double> binEdges = m_gtScales->getETMHFScales().phiBins.at(phiIndex2);
-  			    	      phi2Phy = 0.5*(binEdges.second + binEdges.first);
-  			    	      eta2Phy = 0.; //No Eta for Energy Sums
-  			    	      
-  			    	    } 
-  			
-  			                //If needed convert calo scales to muon scales for comparison (only phi for energy sums)
-  			                if(convertCaloScales) {
-  			
-  			    	       std::string lutName = lutObj2;
-  			    	       lutName += "-MU";
-  			    	       long long tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex2);
-  			    	       LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex2 << " PhiMu = " << tst << std::endl;
-  			    	       phiIndex2 = tst;
-  			
-  			                }
-  			
-  			              } //check it is the EtSum we want   
-  			            } // loop over Etsums
-  			    	
-  			        }
-  			            break;
-  			    	
-  			    	
-  			        default: {
-  			            // should not arrive here, there are no correlation conditions defined for this object
-  			    	LogDebug("L1TGlobal") << "Error could not find the Cond Category for Leg 3" << std::endl;
-  			            return false;
-  			        }
-  			            break;
-  			    } //end switch on overlap-removal leg type
-  			
-  			    // /////////////////////////////////////////////////////////////////////////////////////////
-  			    //
-  			    // here check if there is a match of 1st leg with overlap removal object, and store result 
-  			    //
-  			    // /////////////////////////////////////////////////////////////////////////////////////////
-  			    // These all require some delta eta and phi calculations.  Do them first...for now real calculation but need to
-  			    // revise this to line up with firmware calculations.
-  			    double deltaPhiPhy  = fabs(phi2Phy - phi0Phy);
-  			    if(deltaPhiPhy> M_PI) deltaPhiPhy = 2.*M_PI - deltaPhiPhy;
-  			    double deltaEtaPhy  = fabs(eta2Phy - eta0Phy);
-  			     
-  			    // Deter the integer based delta eta and delta phi
-  			    int deltaPhiFW = abs(phiORIndex0 - phiIndex2);
-  			    if(deltaPhiFW>=phiBound) deltaPhiFW = 2*phiBound - deltaPhiFW;
-  			    std::string lutName = lutObj0;
-  			    lutName += "-";
-  			    lutName += lutObj2;
-  			    long long deltaPhiLUT = m_gtScales->getLUT_DeltaPhi(lutName,deltaPhiFW);
-  			    unsigned int precDeltaPhiLUT = m_gtScales->getPrec_DeltaPhi(lutName);
-  			    
-  			    int deltaEtaFW = abs(etaORIndex0 - etaIndex2);
-  			    long long deltaEtaLUT = 0;
-  			    unsigned int precDeltaEtaLUT = 0;
-  			    if(!etSumCond) {
-  			      deltaEtaLUT = m_gtScales->getLUT_DeltaEta(lutName,deltaEtaFW);
-  			      precDeltaEtaLUT = m_gtScales->getPrec_DeltaEta(lutName);
-  			    }
-  			    
-  			    LogDebug("L1TGlobal") << "Obj0 phiFW = " << phiORIndex0 << " Obj2 phiFW = " << phiIndex2 << "\n"
-  			    << "    DeltaPhiFW = " << deltaPhiFW << "\n"
-  			    << "    LUT Name = " << lutName << " Prec = " << precDeltaPhiLUT << "  DeltaPhiLUT = " << deltaPhiLUT << "\n"
-  			    << "Obj0 etaFW = " << etaIndex0 << " Obj1 etaFW = " << etaIndex1 << "\n"
-  			    << "    DeltaEtaFW = " << deltaEtaFW << "\n"
-  			    << "    LUT Name = " << lutName << " Prec = " << precDeltaEtaLUT << "  DeltaEtaLUT = " << deltaEtaLUT << std::endl;
-  		
-  		      overlapRemovalMatchLeg1 = false;
-  			    
-  			    // If there is a OverlapRemovalDeltaEta cut, check it.
-  			    if(corrPar.corrCutType & 0x10) {
-  			          
-  			          unsigned int preShift = precDeltaEtaLUT - corrPar.precOverlapRemovalEtaCut;
-  			          LogDebug("L1TGlobal")    << "    Testing Overlap Delta Eta Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
-  			                                   << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalEtaCut <<"\n"
-  			        			   << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
-  			        			   << "    Precision Shift = " << preShift << "\n"
-  			        			   << "    deltaEta (shift)= " << (deltaEtaLUT/pow(10,preShift+corrPar.precOverlapRemovalEtaCut)) << "\n"
-  			        			   << "    deltaEtaPhy = " <<  deltaEtaPhy << std::endl; 		      
-  			          
-  			          //if(preShift>0) deltaEtaLUT /= pow(10,preShift);
-  			          if( deltaEtaLUT >= (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) &&
-  			              deltaEtaLUT <= (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) ) {
-  			    
-  		               overlapRemovalMatchLeg1 = true;
-  			             LogDebug("L1TGlobal") << "    Passed Overlap Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
-  			                                   << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
-  			               		  
-  			         } else {
-  			            
-  		               overlapRemovalMatchLeg1 = false;
-  			             LogDebug("L1TGlobal")  << "    Failed Overlap Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
-  			                                   << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
-  		                     // next leg3 object
-  			             continue;
-  			         }	
-  			    }
-  			         	 
-  			    //if there is a OverlapRemovalDeltaPhi cut, check it.
-  			    if(corrPar.corrCutType & 0x20) {
-  			      	
-  			         unsigned int preShift = precDeltaPhiLUT - corrPar.precOverlapRemovalPhiCut;	  
-  			         LogDebug("L1TGlobal")  << "    Testing Overlap Delta Phi Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
-  			                                  << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalPhiCut <<"\n"
-  			       			   << "    deltaPhiLUT = " << deltaPhiLUT  << "\n"
-  			       			   << "    Precision Shift = " << preShift << "\n"
-  			       			   << "    deltaPhi (shift)= " << (deltaPhiLUT/pow(10,preShift+corrPar.precOverlapRemovalPhiCut)) << "\n"
-  			       			   << "    deltaPhiPhy = " <<  deltaPhiPhy << std::endl;  		      
-  			         
-  			         //if(preShift>0) deltaPhiLUT /= pow(10,preShift);
-  			         if( deltaPhiLUT >= (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) &&
-  			             deltaPhiLUT <= (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) ) {
-  			    
-  		              overlapRemovalMatchLeg1 = true;
-  			            LogDebug("L1TGlobal")  << "    Passed Overlap Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
-  			                                  << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
-  			           
-  			        } else {
-  			           
-  		              overlapRemovalMatchLeg1 = false;
-  			            LogDebug("L1TGlobal") << "    Failed Overlap Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
-  			                                  << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
-  		                    // next leg3 object
-  			            continue;
-  			        }	
-  			    }
-  			           	 
-  			    //if there is a OverlapRemovalDeltaR cut, check it.
-  			    if(corrPar.corrCutType & 0x40) {
-  			      	
-  			         //Assumes Delta Eta and Delta Phi LUTs have the same precision
-  			         unsigned int preShift = 2*precDeltaPhiLUT  - corrPar.precOverlapRemovalDRCut;	  
-  			         double deltaRSqPhy = deltaPhiPhy*deltaPhiPhy + deltaEtaPhy*deltaEtaPhy;
-  			         long long deltaRSq = deltaEtaLUT*deltaEtaLUT + deltaPhiLUT*deltaPhiLUT;
-  			       		  
-  			         LogDebug("L1TGlobal") << "    Testing Overlap Delta R Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
-  			                                  << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalDRCut <<"\n"
-  			       			   << "    deltaPhiLUT = " << deltaPhiLUT << "\n"
-  			       			   << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
-  			       			   << "    deltaRSqLUT = " << deltaRSq <<  "\n"
-  			       			   << "    Precision Shift = " << preShift << "\n" 
-  			       			   << "    deltaRSqLUT (shift)= " << (deltaRSq/pow(10,preShift+corrPar.precDRCut))	<< "\n"				   
-  			       			   << "    deltaRSqPhy = " << deltaRSqPhy << std::endl;		      
-  			         
-  			         //if(preShift>0) deltaRSq /= pow(10,preShift);
-  			         if( deltaRSq >= (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) &&
-  			             deltaRSq <= (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) ) {
-  			    
-  		                     overlapRemovalMatchLeg1 = true;
-  			             LogDebug("L1TGlobal") << "    Passed Overlap Delta R Cut [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
-  			                                  << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
-  			               
-  			        } else {
-  			           
-  		                     overlapRemovalMatchLeg1 = false;
-  			             LogDebug("L1TGlobal") << "    Failed Overlap Delta R Cut [" << (int)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
-  			                                  << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
-  		                     // next leg3 object
-  			             continue;
-  			        }	
-  			    }  	 
-  		
-  		            
-  			} // end loop over combinations in overlap-removal leg.  
-
-        // skip object leg1 if matched with overlap removal object
-        // ///////////////////////////////////////////////////////
-        if (overlapRemovalMatchLeg1 == true) continue; 
-
+        // loop over overlap-removal leg combination which produced individually "true" as Type1s 
         // ///////////////////////////////////////////////////////////////////////////////////////////
-        // Now loop over the second leg to get its information
-        // ///////////////////////////////////////////////////////////////////////////////////////////
-        for (std::vector<SingleCombInCond>::const_iterator it1Comb = cond1Comb.begin(); it1Comb != cond1Comb.end(); it1Comb++) {
+        for (std::vector<SingleCombInCond>::const_iterator it2Comb = cond2Comb.begin(); it2Comb != cond2Comb.end(); it2Comb++) {
+        
+          // Type1s: there is 1 object only, no need for a loop, index 0 should be OK in (*it2Comb)[0]
+          // ... but add protection to not crash
+          int obj2Index = -1;
 
-            LogDebug("L1TGlobal") << "Looking at second Condition" << std::endl;  
-            // Type1s: there is 1 object only, no need for a loop (*it1Comb)[0]
-            // ... but add protection to not crash
-            int obj1Index = -1;
+          if ((*it2Comb).size() > 0) {
+            obj2Index = (*it2Comb)[0];
+          } else {
+            LogTrace("L1TGlobal")
+            << "\n  SingleCombInCond (*it2Comb).size() "
+            << ((*it2Comb).size()) << std::endl;
+            return false;
+          }
 
-            if ((*it1Comb).size() > 0) {
-                obj1Index = (*it1Comb)[0];
-            } else {
-                LogTrace("L1TGlobal")
-                        << "\n  SingleCombInCond (*it1Comb).size() "
-                        << ((*it1Comb).size()) << std::endl;
-                return false;
+          // Collect the information on the overlap-removal leg 
+          switch (cond2Categ) {
+
+            case CondMuon: {
+
+              lutObj2 = "MU";
+              candMuVec = m_uGtB->getCandL1Mu();
+              phiIndex2 =  (candMuVec->at(bxEval,obj2Index))->hwPhi(); //(*candMuVec)[obj2Index]->phiIndex();
+              etaIndex2 =  (candMuVec->at(bxEval,obj2Index))->hwEta();
+              int etaBin2 = etaIndex2;
+              if(etaBin2<0) etaBin2 = m_gtScales->getMUScales().etaBins.size() + etaBin2; //twos complement		
+              //LogDebug("L1TGlobal") << "Muon phi" << phiIndex2 << " eta " << etaIndex2 << " etaBin2 = " << etaBin2  << " et " << etIndex2 << std::endl;
+
+              // Determine Floating Pt numbers for floating point caluclation
+              std::pair<double, double> binEdges = m_gtScales->getMUScales().phiBins.at(phiIndex2);
+              phi2Phy = 0.5*(binEdges.second + binEdges.first);
+              binEdges = m_gtScales->getMUScales().etaBins.at(etaBin2);
+              eta2Phy = 0.5*(binEdges.second + binEdges.first);		
+              
+              LogDebug("L1TGlobal") << "Found all quantities for the muon 0" << std::endl;		
             }
-	    
-	    //If we are dealing with the same object type avoid the two legs
-	    // either being the same object 
-	    if( cndObjTypeVec[0] == cndObjTypeVec[1] &&
-	               obj0Index == obj1Index ) {
-		
-		       LogDebug("L1TGlobal") << "Corr Condition looking at same leg...skip" << std::endl;
-		       continue;
-	    }	       
+              break;
+        
+            // Calorimeter Objects (EG, Jet, Tau)
+            case CondCalo: {
 
-            switch (cond1Categ) {
-                case CondMuon: {
-		   lutObj1 = "MU"; 
-                   candMuVec = m_uGtB->getCandL1Mu();
-                   phiIndex1 =  (candMuVec->at(bxEval,obj1Index))->hwPhi(); //(*candMuVec)[obj0Index]->phiIndex();
-                   etaIndex1 =  (candMuVec->at(bxEval,obj1Index))->hwEta();
-		   etIndex1  =  (candMuVec->at(bxEval,obj1Index))->hwPt();
-		   chrg1     =  (candMuVec->at(bxEval,obj1Index))->hwCharge();
-		   etaBin1 = etaIndex1;
-		   if(etaBin1<0) etaBin1 = m_gtScales->getMUScales().etaBins.size() + etaBin1;	   
-//		   LogDebug("L1TGlobal") << "Muon phi" << phiIndex1 << " eta " << etaIndex1 << " etaBin1 = " << etaBin1  << " et " << etIndex1 << std::endl;
- 
-		   etBin1 = etIndex1;
-		   int ssize = m_gtScales->getMUScales().etBins.size();
-		   if (etBin1 >= ssize){ 
-		     LogTrace("L1TGlobal") 
-		       << "muon2 hw et" << etBin1 << " out of scale range.  Setting to maximum.";
-		     etBin1 = ssize-1;   
-		   } 
+              switch(cndObjTypeVec[0]) {
 
-		   // Determine Floating Pt numbers for floating point caluclation
-		   std::pair<double, double> binEdges = m_gtScales->getMUScales().phiBins.at(phiIndex1);
-		   phi1Phy = 0.5*(binEdges.second + binEdges.first);
-		   binEdges = m_gtScales->getMUScales().etaBins.at(etaBin1);
-		   eta1Phy = 0.5*(binEdges.second + binEdges.first);		
-		   binEdges = m_gtScales->getMUScales().etBins.at(etBin1);
-		   et1Phy = 0.5*(binEdges.second + binEdges.first);		
-	   
-                }
-                    break;
-                case CondCalo: {
-        	   switch(cndObjTypeVec[1]) {
-	             case gtEG: {
-			candCaloVec = m_uGtB->getCandL1EG();
-			phiIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwPhi();
-			etaIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwEta();
-			etIndex1  =  (candCaloVec->at(bxEval,obj1Index))->hwPt();
-			etaBin1   =   etaIndex1;
-			if(etaBin1<0) etaBin1 = m_gtScales->getEGScales().etaBins.size() + etaBin1;
-			
-			etBin1 = etIndex1;
-			int ssize = m_gtScales->getEGScales().etBins.size();
-			if (etBin1 >= ssize){ 
-			  LogTrace("L1TGlobal") 
-			    << "EG1 hw et" << etBin1 << " out of scale range.  Setting to maximum.";
-			  etBin1 = ssize-1; 			  
-			} 
-			
-			// Determine Floating Pt numbers for floating point caluclation
-		   	std::pair<double, double> binEdges = m_gtScales->getEGScales().phiBins.at(phiIndex1);
-		   	phi1Phy = 0.5*(binEdges.second + binEdges.first);			
-			binEdges = m_gtScales->getEGScales().etaBins.at(etaBin1);
-			eta1Phy = 0.5*(binEdges.second + binEdges.first);		
-			binEdges = m_gtScales->getEGScales().etBins.at(etBin1);
-			et1Phy = 0.5*(binEdges.second + binEdges.first);
-		    	lutObj1 = "EG";
-		     }
-		       break;
-		     case gtJet: {
-			candCaloVec = m_uGtB->getCandL1Jet();
-			phiIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwPhi();
-			etaIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwEta();
-			etIndex1  =  (candCaloVec->at(bxEval,obj1Index))->hwPt();
-			etaBin1 = etaIndex1;
-			if(etaBin1<0) etaBin1 = m_gtScales->getJETScales().etaBins.size() + etaBin1;
-			
-			etBin1 = etIndex1;						
-			int ssize = m_gtScales->getJETScales().etBins.size();
-			assert(ssize);
-			if (etBin1 >= ssize){ 			  
-			  //edm::LogWarning("L1TGlobal") 
-			  //<< "jet2 hw et" << etBin1 << " out of scale range.  Setting to maximum.";
-			  etBin1 = ssize-1; 			  
-			} 
+                case gtEG: {
+                  lutObj2 = "EG";
+                  candCaloVec = m_uGtB->getCandL1EG();
+                  phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
+                  etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
+                  if(etaBin2<0) etaBin2 = m_gtScales->getEGScales().etaBins.size() + etaBin2;
+                  //LogDebug("L1TGlobal") << "EG0 phi" << phiIndex2 << " eta " << etaIndex2 << " etaBin2 = " << etaBin2 << " et " << etIndex2 << std::endl;
 
-			// Determine Floating Pt numbers for floating point caluclation
-		   	std::pair<double, double> binEdges = m_gtScales->getJETScales().phiBins.at(phiIndex1);
-		   	phi1Phy = 0.5*(binEdges.second + binEdges.first);			
-			binEdges = m_gtScales->getJETScales().etaBins.at(etaBin1);
-			eta1Phy = 0.5*(binEdges.second + binEdges.first);		
-			//CRASHES HERE:
-			binEdges = m_gtScales->getJETScales().etBins.at(etBin1);
-			et1Phy = 0.5*(binEdges.second + binEdges.first);
-			lutObj1 = "JET";
-		     }
-		       break;
-		     case gtTau: {
-			candCaloVec = m_uGtB->getCandL1Tau();
-			phiIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwPhi();
-			etaIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwEta();
-			etIndex1  =  (candCaloVec->at(bxEval,obj1Index))->hwPt();
-			etaBin1 = etaIndex1;
-			if(etaBin1<0) etaBin1 = m_gtScales->getTAUScales().etaBins.size() + etaBin1;
-			
-			etBin1 = etIndex1;
-			int ssize = m_gtScales->getTAUScales().etBins.size();
-			if (etBin1 >= ssize){ 
-			  LogTrace("L1TGlobal") 
-			    << "tau2 hw et" << etBin1 << " out of scale range.  Setting to maximum.";
-			  etBin1 = ssize-1; 			  
-			} 
-						
-			// Determine Floating Pt numbers for floating point caluclation
-		   	std::pair<double, double> binEdges = m_gtScales->getTAUScales().phiBins.at(phiIndex1);
-		   	phi1Phy = 0.5*(binEdges.second + binEdges.first);			
-			binEdges = m_gtScales->getTAUScales().etaBins.at(etaBin1);
-			eta1Phy = 0.5*(binEdges.second + binEdges.first);		
-			binEdges = m_gtScales->getTAUScales().etBins.at(etBin1);
-			et1Phy = 0.5*(binEdges.second + binEdges.first);	
-			lutObj1 = "TAU";
-		     }
-	               break;
-		     default: {
-		     }  
-	           break;
-	           } //end switch on calo type.
- 
-                   
-                   phiORIndex1 = phiIndex1;
-                   etaORIndex1 = etaIndex1;
-
-                   //If needed convert calo scales to muon scales for comparison
-                   if(convertCaloScales) {
-		   
-		     std::string lutName = lutObj1;
-		     lutName += "-MU";
-		     long long tst = m_gtScales->getLUT_CalMuEta(lutName,etaBin1);
-		     LogDebug("L1TGlobal") << lutName <<"  EtaCal = " << etaIndex1 << " EtaMu = " << tst << std::endl; 
-		     etaIndex1 = tst;
-
-
-		     tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex1);
-		     LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex1 << " PhiMu = " << tst << std::endl;
-		     phiIndex1 = tst;
-
-                   }
-
-                  //If needed convert calo scales to muon scales for comparison
-                  if(convertCaloScalesForOverlapRemovalFromLeg1) {
-                     phiORIndex1 = phiIndex1;
-                     etaORIndex1 = etaIndex1;
-		   		  
-                  }
-
+                  // Determine Floating Pt numbers for floating point caluclation
+                  std::pair<double, double> binEdges = m_gtScales->getEGScales().phiBins.at(phiIndex2);
+                  phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                  binEdges = m_gtScales->getEGScales().etaBins.at(etaBin2);
+                  eta2Phy = 0.5*(binEdges.second + binEdges.first);		
 
                 }
-                    break;
-                case CondEnergySum: {
+                  break;
+                case gtJet: {
+                  lutObj2 = "JET";
+                  candCaloVec = m_uGtB->getCandL1Jet();
+                  phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
+                  etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
+                  etaBin2 = etaIndex2;
+                  if(etaBin2<0) etaBin2 = m_gtScales->getJETScales().etaBins.size() + etaBin2;
+                  
+                  // Determine Floating Pt numbers for floating point caluclation
+                  std::pair<double, double> binEdges = m_gtScales->getJETScales().phiBins.at(phiIndex2);
+                  phi2Phy = 0.5*(binEdges.second + binEdges.first);			
+                  binEdges = m_gtScales->getJETScales().etaBins.at(etaBin2);
+                  eta2Phy = 0.5*(binEdges.second + binEdges.first);		
 
-                   LogDebug("L1TGlobal") << "Looking at second Condition as Energy Sum: " << cndObjTypeVec[1] << std::endl;
-                   etSumCond = true;
-		   
-		   //Stupid mapping between enum types for energy sums.
-		   l1t::EtSum::EtSumType type;
-		   switch( cndObjTypeVec[1] ){
-		   case gtETM:
-		     type = l1t::EtSum::EtSumType::kMissingEt;
-		     lutObj1 = "ETM";
-		     break;
-		   case gtETT:
-		     type = l1t::EtSum::EtSumType::kTotalEt;
-		     lutObj1 = "ETT";
-		     break;
-		   case gtETTem:
-		     type = l1t::EtSum::EtSumType::kTotalEtEm;
-		     lutObj1 = "ETTem";
-		     break;		     
-		   case gtHTM:
-		     type = l1t::EtSum::EtSumType::kMissingHt;
-		     lutObj1 = "HTM";
-		     break;
-		   case gtHTT:
-		     type = l1t::EtSum::EtSumType::kTotalHt;
-		     lutObj1 = "HTT";
-		     break;
-		   case gtETMHF:
-		     type = l1t::EtSum::EtSumType::kMissingEtHF;
-		     lutObj1 = "ETMHF";
-		     break;
-		   case gtMinBiasHFP0:
-		   case gtMinBiasHFM0:
-		   case gtMinBiasHFP1:
-		   case gtMinBiasHFM1:
-		     type = l1t::EtSum::EtSumType::kMinBiasHFP0;
-		     lutObj1 = "MinBias";
-		  break;		     
-		   default:
-		     edm::LogError("L1TGlobal")
-		       << "\n  Error: "
-		       << "Unmatched object type from template to EtSumType, cndObjTypeVec[1] = "
-		       << cndObjTypeVec[1]
-		       << std::endl;
-		     type = l1t::EtSum::EtSumType::kTotalEt;
-		     break;
-		   }
-                   
-		   
-		   candEtSumVec = m_uGtB->getCandL1EtSum();
-		    
-		   LogDebug("L1TGlobal") << "obj " << lutObj1 << " Vector Size " << candEtSumVec->size(bxEval) << std::endl; 
-                   for( int iEtSum=0; iEtSum < (int)candEtSumVec->size(bxEval); iEtSum++) {
-		     if( (candEtSumVec->at(bxEval,iEtSum))->getType() == type ) {
-                       phiIndex1 =  (candEtSumVec->at(bxEval,iEtSum))->hwPhi();
-                       etaIndex1 =  (candEtSumVec->at(bxEval,iEtSum))->hwEta();
-		       etIndex1  =  (candEtSumVec->at(bxEval,iEtSum))->hwPt(); 
+                }
+                  break;
+                case gtTau: {
 
-		       // Determine Floating Pt numbers for floating point caluclation
-		       
-		       if(cndObjTypeVec[1] == gtETM) {
-		         std::pair<double, double> binEdges = m_gtScales->getETMScales().phiBins.at(phiIndex1);
-			 phi1Phy = 0.5*(binEdges.second + binEdges.first);
-			 eta1Phy = 0.; //No Eta for Energy Sums
-			 
-			 etBin1 = etIndex1;
-			 int ssize = m_gtScales->getETMScales().etBins.size();
-			 assert(ssize > 0);
-			 if (etBin1 >= ssize){ etBin1 = ssize-1; } 			   
-		      
-			 binEdges = m_gtScales->getETMScales().etBins.at(etBin1);
-			 et1Phy = 0.5*(binEdges.second + binEdges.first);
-		       } else if(cndObjTypeVec[1] == gtHTM) {
-		         std::pair<double, double> binEdges = m_gtScales->getHTMScales().phiBins.at(phiIndex1);
-			 phi1Phy = 0.5*(binEdges.second + binEdges.first);
-			 eta1Phy = 0.; //No Eta for Energy Sums
-			 
-			 etBin1 = etIndex1;
-			 int ssize = m_gtScales->getHTMScales().etBins.size();
-			 assert(ssize > 0);
-			 if (etBin1 >= ssize){ etBin1 = ssize-1; } 			   
-
-			 binEdges = m_gtScales->getHTMScales().etBins.at(etBin1);
-			 et1Phy = 0.5*(binEdges.second + binEdges.first);
-		       } else if(cndObjTypeVec[1] == gtETMHF) {
-		         std::pair<double, double> binEdges = m_gtScales->getETMHFScales().phiBins.at(phiIndex1);
-			 phi1Phy = 0.5*(binEdges.second + binEdges.first);
-			 eta1Phy = 0.; //No Eta for Energy Sums
-			 
-			 etBin1 = etIndex1;
-			 int ssize = m_gtScales->getETMHFScales().etBins.size();
-			 assert(ssize > 0);
-			 if (etBin1 >= ssize){ etBin1 = ssize-1; } 			   
-
-			 binEdges = m_gtScales->getETMHFScales().etBins.at(etBin1);
-			 et1Phy = 0.5*(binEdges.second + binEdges.first);
-		       }
-
-
-                       phiORIndex1 = phiIndex1;
-                       etaORIndex1 = etaIndex1;
-
-                       //If needed convert calo scales to muon scales for comparison (only phi for energy sums)   
-                       if(convertCaloScales) {
-
-			 std::string lutName = lutObj1;
-			 lutName += "-MU";
-			 long long tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex1);
-			 LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex1 << " PhiMu = " << tst << std::endl;
-			 phiIndex1 = tst;
-
-                       }
-
-                       //If needed convert calo scales to muon scales for comparison (only phi for energy sums)   
-                       if(convertCaloScalesForOverlapRemovalFromLeg1) {
-                          phiORIndex1 = phiIndex1;
-		   		  
-                       }
-
-
-                     } //check it is the EtSum we want   
-                   } // loop over Etsums
-
+                  candCaloVec = m_uGtB->getCandL1Tau();
+                  phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
+                  etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
+                  if(etaBin2<0) etaBin2 = m_gtScales->getTAUScales().etaBins.size() + etaBin2;
+                  
+                  // Determine Floating Pt numbers for floating point caluclation
+                  std::pair<double, double> binEdges = m_gtScales->getTAUScales().phiBins.at(phiIndex2);
+                  phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                  binEdges = m_gtScales->getTAUScales().etaBins.at(etaBin2);
+                  eta2Phy = 0.5*(binEdges.second + binEdges.first);		
+                  lutObj2 = "TAU";
                 }
                     break;
                 default: {
-                    // should not arrive here, there are no correlation conditions defined for this object
-                    LogDebug("L1TGlobal") << "Error could not find the Cond Category for Leg 0" << std::endl;
-                    return false;
-                }
+                }  
+                  break;
+
+              } //end switch on calo type.
+            	
+              //If needed convert calo scales to muon scales for comparison
+              if(convertCaloScales) {
+
+              	  std::string lutName = lutObj2;
+              	  lutName += "-MU";
+              	  long long tst = m_gtScales->getLUT_CalMuEta(lutName,etaBin2);
+              	  LogDebug("L1TGlobal") << lutName <<"  EtaCal = " << etaIndex2 << " etaBin2 = " << etaBin2 << " EtaMu = " << tst << std::endl; 
+              	  etaIndex2 = tst;
+
+              	  tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex2);
+              	  LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex2 << " PhiMu = " << tst << std::endl;
+              	  phiIndex2 = tst;
+              	   		  
+              }
+        
+            } // end case CondCalo
+              break;
+            	
+            // Energy Sums		
+            case CondEnergySum: {
+
+              etSumCond = true;
+              //Stupid mapping between enum types for energy sums.
+              l1t::EtSum::EtSumType type;
+              switch( cndObjTypeVec[0] ){
+              case gtETM:
+                type = l1t::EtSum::EtSumType::kMissingEt;
+                lutObj2 = "ETM";
+                break;
+              case gtETT:
+                type = l1t::EtSum::EtSumType::kTotalEt;
+                lutObj2 = "ETT"; 
+                break;
+              case gtETTem:
+                type = l1t::EtSum::EtSumType::kTotalEtEm;
+                lutObj2 = "ETTem"; //should this be just ETT (share LUTs?) Can't be used for CorrCond anyway since now directional information
+                break;		  
+              case gtHTM:
+                type = l1t::EtSum::EtSumType::kMissingHt;
+                lutObj2 = "HTM";
+                break;
+              case gtHTT:
+                type = l1t::EtSum::EtSumType::kTotalHt;
+                lutObj2 = "HTT";
+                break;
+              case gtETMHF:
+                type = l1t::EtSum::EtSumType::kMissingEtHF;
+                lutObj2 = "ETMHF"; 
+                break;
+              case gtMinBiasHFP0:
+              case gtMinBiasHFM0:
+              case gtMinBiasHFP1:
+              case gtMinBiasHFM1:
+                type = l1t::EtSum::EtSumType::kMinBiasHFP0;
+                lutObj2 = "MinBias"; //??Fix?? Not a valid LUT type Can't be used for CorrCond anyway since now directional information
+                break;
+              default:
+                edm::LogError("L1TGlobal")
+                << "\n  Error: "
+                << "Unmatched object type from template to EtSumType, cndObjTypeVec[0] = "
+                << cndObjTypeVec[0]
+                << std::endl;
+                type = l1t::EtSum::EtSumType::kTotalEt;
+                break;
+              }
+  			    
+              candEtSumVec = m_uGtB->getCandL1EtSum();
+
+              for( int iEtSum=0; iEtSum < (int)candEtSumVec->size(bxEval); iEtSum++) {
+                if( (candEtSumVec->at(bxEval,iEtSum))->getType() == type ) {
+                  phiIndex2 =  (candEtSumVec->at(bxEval,iEtSum))->hwPhi();
+                  etaIndex2 =  (candEtSumVec->at(bxEval,iEtSum))->hwEta();
+  			    
+                  //  Get the floating point numbers
+                  if(cndObjTypeVec[0] == gtETM ) {
+                    std::pair<double, double> binEdges = m_gtScales->getETMScales().phiBins.at(phiIndex2);
+                    phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                    eta2Phy = 0.; //No Eta for Energy Sums
+
+                  } else if (cndObjTypeVec[0] == gtHTM) {
+                    std::pair<double, double> binEdges = m_gtScales->getHTMScales().phiBins.at(phiIndex2);
+                    phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                    eta2Phy = 0.; //No Eta for Energy Sums
+                    
+                  } else if (cndObjTypeVec[0] == gtETMHF) {
+                    std::pair<double, double> binEdges = m_gtScales->getETMHFScales().phiBins.at(phiIndex2);
+                    phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                    eta2Phy = 0.; //No Eta for Energy Sums
+                    
+                  } 
+                  
+                  //If needed convert calo scales to muon scales for comparison (only phi for energy sums)
+                  if(convertCaloScales) {
+  			    
+                    std::string lutName = lutObj2;
+                    lutName += "-MU";
+                    long long tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex2);
+                    LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex2 << " PhiMu = " << tst << std::endl;
+                    phiIndex2 = tst;
+  			    
+                  }
+  			    
+                } //check it is the EtSum we want   
+              } // loop over Etsums
+
+            }
+              break;
+
+            default: {
+              // should not arrive here, there are no correlation conditions defined for this object
+              LogDebug("L1TGlobal") << "Error could not find the Cond Category for Leg 3" << std::endl;
+              return false;
+            }
+              break;
+          } //end switch on overlap-removal leg type
+  			
+          // /////////////////////////////////////////////////////////////////////////////////////////
+          //
+          // here check if there is a match of 1st leg with overlap removal object, and store result 
+          //
+          // /////////////////////////////////////////////////////////////////////////////////////////
+          // These all require some delta eta and phi calculations.  Do them first...for now real calculation but need to
+          // revise this to line up with firmware calculations.
+          double deltaPhiPhy  = fabs(phi2Phy - phi0Phy);
+          if(deltaPhiPhy> M_PI) deltaPhiPhy = 2.*M_PI - deltaPhiPhy;
+          double deltaEtaPhy  = fabs(eta2Phy - eta0Phy);
+           
+          // Deter the integer based delta eta and delta phi
+          int deltaPhiFW = abs(phiORIndex0 - phiIndex2);
+          if(deltaPhiFW>=phiBound) deltaPhiFW = 2*phiBound - deltaPhiFW;
+          std::string lutName = lutObj0;
+          lutName += "-";
+          lutName += lutObj2;
+          long long deltaPhiLUT = m_gtScales->getLUT_DeltaPhi(lutName,deltaPhiFW);
+          unsigned int precDeltaPhiLUT = m_gtScales->getPrec_DeltaPhi(lutName);
+          
+          int deltaEtaFW = abs(etaORIndex0 - etaIndex2);
+          long long deltaEtaLUT = 0;
+          unsigned int precDeltaEtaLUT = 0;
+          if(!etSumCond) {
+            deltaEtaLUT = m_gtScales->getLUT_DeltaEta(lutName,deltaEtaFW);
+            precDeltaEtaLUT = m_gtScales->getPrec_DeltaEta(lutName);
+          }
+          
+          LogDebug("L1TGlobal") << "Obj0 phiFW = " << phiORIndex0 << " Obj2 phiFW = " << phiIndex2 << "\n"
+          << "    DeltaPhiFW = " << deltaPhiFW << "\n"
+          << "    LUT Name = " << lutName << " Prec = " << precDeltaPhiLUT << "  DeltaPhiLUT = " << deltaPhiLUT << "\n"
+          << "Obj0 etaFW = " << etaIndex0 << " Obj1 etaFW = " << etaIndex1 << "\n"
+          << "    DeltaEtaFW = " << deltaEtaFW << "\n"
+          << "    LUT Name = " << lutName << " Prec = " << precDeltaEtaLUT << "  DeltaEtaLUT = " << deltaEtaLUT << std::endl;
+          
+          overlapRemovalMatchLeg1 = false;
+          
+          // If there is a OverlapRemovalDeltaEta cut, check it.
+          if(corrPar.corrCutType & 0x10) {
+                
+                unsigned int preShift = precDeltaEtaLUT - corrPar.precOverlapRemovalEtaCut;
+                LogDebug("L1TGlobal")    << "    Testing Overlap Delta Eta Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalEtaCut <<"\n"
+                << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
+                << "    Precision Shift = " << preShift << "\n"
+                << "    deltaEta (shift)= " << (deltaEtaLUT/pow(10,preShift+corrPar.precOverlapRemovalEtaCut)) << "\n"
+                << "    deltaEtaPhy = " <<  deltaEtaPhy << std::endl; 		      
+                
+                //if(preShift>0) deltaEtaLUT /= pow(10,preShift);
+                if( deltaEtaLUT >= (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) &&
+                    deltaEtaLUT <= (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) ) {
+          
+                  overlapRemovalMatchLeg1 = true;
+                  LogDebug("L1TGlobal") << "    Passed Overlap Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                     		  
+                } else {
+    
+                  overlapRemovalMatchLeg1 = false;
+                  LogDebug("L1TGlobal")  << "    Failed Overlap Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                   // next leg3 object
+                   continue;
+                }	
+    
+              }
+               	 
+              //if there is a OverlapRemovalDeltaPhi cut, check it.
+              if(corrPar.corrCutType & 0x20) {
+    
+                unsigned int preShift = precDeltaPhiLUT - corrPar.precOverlapRemovalPhiCut;	  
+                LogDebug("L1TGlobal")  << "    Testing Overlap Delta Phi Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalPhiCut <<"\n"
+                << "    deltaPhiLUT = " << deltaPhiLUT  << "\n"
+                << "    Precision Shift = " << preShift << "\n"
+                << "    deltaPhi (shift)= " << (deltaPhiLUT/pow(10,preShift+corrPar.precOverlapRemovalPhiCut)) << "\n"
+                << "    deltaPhiPhy = " <<  deltaPhiPhy << std::endl;  		      
+
+                //if(preShift>0) deltaPhiLUT /= pow(10,preShift);
+                if( deltaPhiLUT >= (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) &&
+                  deltaPhiLUT <= (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) ) {
+
+                  overlapRemovalMatchLeg1 = true;
+                  LogDebug("L1TGlobal")  << "    Passed Overlap Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
+
+                } else {
+
+                  overlapRemovalMatchLeg1 = false;
+                  LogDebug("L1TGlobal") << "    Failed Overlap Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                  // next leg3 object
+                  continue;
+                }	
+              }
+
+              //if there is a OverlapRemovalDeltaR cut, check it.
+              if(corrPar.corrCutType & 0x40) {
+
+                //Assumes Delta Eta and Delta Phi LUTs have the same precision
+                unsigned int preShift = 2*precDeltaPhiLUT  - corrPar.precOverlapRemovalDRCut;	  
+                double deltaRSqPhy = deltaPhiPhy*deltaPhiPhy + deltaEtaPhy*deltaEtaPhy;
+                long long deltaRSq = deltaEtaLUT*deltaEtaLUT + deltaPhiLUT*deltaPhiLUT;
+
+                LogDebug("L1TGlobal") << "    Testing Overlap Delta R Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalDRCut <<"\n"
+                << "    deltaPhiLUT = " << deltaPhiLUT << "\n"
+                << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
+                << "    deltaRSqLUT = " << deltaRSq <<  "\n"
+                << "    Precision Shift = " << preShift << "\n" 
+                << "    deltaRSqLUT (shift)= " << (deltaRSq/pow(10,preShift+corrPar.precDRCut))	<< "\n"				   
+                << "    deltaRSqPhy = " << deltaRSqPhy << std::endl;		      
+
+                //if(preShift>0) deltaRSq /= pow(10,preShift);
+                if( deltaRSq >= (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) &&
+                  deltaRSq <= (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) ) {
+
+                  overlapRemovalMatchLeg1 = true;
+                  LogDebug("L1TGlobal") << "    Passed Overlap Delta R Cut [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
+
+                } else {
+
+                  overlapRemovalMatchLeg1 = false;
+                  LogDebug("L1TGlobal") << "    Failed Overlap Delta R Cut [" << (int)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                  // next leg3 object
+                  continue;
+
+                }	
+
+              }  	 
+
+            } // end loop over combinations in overlap-removal leg.  
+
+            // skip object leg1 if matched with overlap removal object
+            // ///////////////////////////////////////////////////////
+            if (overlapRemovalMatchLeg1 == true) continue; 
+
+            // ///////////////////////////////////////////////////////////////////////////////////////////
+            // Now loop over the second leg to get its information
+            // ///////////////////////////////////////////////////////////////////////////////////////////
+            for (std::vector<SingleCombInCond>::const_iterator it1Comb = cond1Comb.begin(); it1Comb != cond1Comb.end(); it1Comb++) {
+
+              LogDebug("L1TGlobal") << "Looking at second Condition" << std::endl;  
+              // Type1s: there is 1 object only, no need for a loop (*it1Comb)[0]
+              // ... but add protection to not crash
+              int obj1Index = -1;
+
+              if ((*it1Comb).size() > 0) {
+                obj1Index = (*it1Comb)[0];
+              } else {
+                LogTrace("L1TGlobal")
+                << "\n  SingleCombInCond (*it1Comb).size() "
+                << ((*it1Comb).size()) << std::endl;
+                return false;
+              }
+
+              //If we are dealing with the same object type avoid the two legs
+              // either being the same object 
+              if( cndObjTypeVec[0] == cndObjTypeVec[1] &&
+                obj0Index == obj1Index ) {
+		
+                LogDebug("L1TGlobal") << "Corr Condition looking at same leg...skip" << std::endl;
+                continue;
+              }
+
+            switch (cond1Categ) {
+              case CondMuon: {
+                lutObj1 = "MU"; 
+                candMuVec = m_uGtB->getCandL1Mu();
+                phiIndex1 =  (candMuVec->at(bxEval,obj1Index))->hwPhi(); //(*candMuVec)[obj0Index]->phiIndex();
+                etaIndex1 =  (candMuVec->at(bxEval,obj1Index))->hwEta();
+                etIndex1  =  (candMuVec->at(bxEval,obj1Index))->hwPt();
+                chrg1     =  (candMuVec->at(bxEval,obj1Index))->hwCharge();
+                etaBin1 = etaIndex1;
+                if(etaBin1<0) etaBin1 = m_gtScales->getMUScales().etaBins.size() + etaBin1;	   
+                //		   LogDebug("L1TGlobal") << "Muon phi" << phiIndex1 << " eta " << etaIndex1 << " etaBin1 = " << etaBin1  << " et " << etIndex1 << std::endl;
+                etBin1 = etIndex1;
+                int ssize = m_gtScales->getMUScales().etBins.size();
+
+                if (etBin1 >= ssize){ 
+                  LogTrace("L1TGlobal") 
+                  << "muon2 hw et" << etBin1 << " out of scale range.  Setting to maximum.";
+                  etBin1 = ssize-1;   
+                } 
+
+                // Determine Floating Pt numbers for floating point caluclation
+                std::pair<double, double> binEdges = m_gtScales->getMUScales().phiBins.at(phiIndex1);
+                phi1Phy = 0.5*(binEdges.second + binEdges.first);
+                binEdges = m_gtScales->getMUScales().etaBins.at(etaBin1);
+                eta1Phy = 0.5*(binEdges.second + binEdges.first);		
+                binEdges = m_gtScales->getMUScales().etBins.at(etBin1);
+                et1Phy = 0.5*(binEdges.second + binEdges.first);		
+	   
+              }
+                break;
+
+              case CondCalo: {
+
+                switch(cndObjTypeVec[1]) {
+
+                  case gtEG: {
+
+                    candCaloVec = m_uGtB->getCandL1EG();
+                    phiIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwPhi();
+                    etaIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwEta();
+                    etIndex1  =  (candCaloVec->at(bxEval,obj1Index))->hwPt();
+                    etaBin1   =   etaIndex1;
+                    if(etaBin1<0) etaBin1 = m_gtScales->getEGScales().etaBins.size() + etaBin1;
+                    
+                    etBin1 = etIndex1;
+                    int ssize = m_gtScales->getEGScales().etBins.size();
+                    if (etBin1 >= ssize){ 
+                      LogTrace("L1TGlobal") 
+                      << "EG1 hw et" << etBin1 << " out of scale range.  Setting to maximum.";
+                      etBin1 = ssize-1; 			  
+                    } 
+                    
+                    // Determine Floating Pt numbers for floating point caluclation
+                    std::pair<double, double> binEdges = m_gtScales->getEGScales().phiBins.at(phiIndex1);
+                    phi1Phy = 0.5*(binEdges.second + binEdges.first);			
+                    binEdges = m_gtScales->getEGScales().etaBins.at(etaBin1);
+                    eta1Phy = 0.5*(binEdges.second + binEdges.first);		
+                    binEdges = m_gtScales->getEGScales().etBins.at(etBin1);
+                    et1Phy = 0.5*(binEdges.second + binEdges.first);
+                    lutObj1 = "EG";
+                  }
                     break;
+
+                  case gtJet: {
+                    candCaloVec = m_uGtB->getCandL1Jet();
+                    phiIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwPhi();
+                    etaIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwEta();
+                    etIndex1  =  (candCaloVec->at(bxEval,obj1Index))->hwPt();
+                    etaBin1 = etaIndex1;
+                    if(etaBin1<0) etaBin1 = m_gtScales->getJETScales().etaBins.size() + etaBin1;
+                    etBin1 = etIndex1;						
+                    int ssize = m_gtScales->getJETScales().etBins.size();
+                    assert(ssize);
+                    if (etBin1 >= ssize){ 			  
+                      //edm::LogWarning("L1TGlobal") 
+                      //<< "jet2 hw et" << etBin1 << " out of scale range.  Setting to maximum.";
+                      etBin1 = ssize-1; 			  
+                    } 
+                    
+                    // Determine Floating Pt numbers for floating point caluclation
+                    std::pair<double, double> binEdges = m_gtScales->getJETScales().phiBins.at(phiIndex1);
+                    phi1Phy = 0.5*(binEdges.second + binEdges.first);			
+                    binEdges = m_gtScales->getJETScales().etaBins.at(etaBin1);
+                    eta1Phy = 0.5*(binEdges.second + binEdges.first);		
+                    //CRASHES HERE:
+                    binEdges = m_gtScales->getJETScales().etBins.at(etBin1);
+                    et1Phy = 0.5*(binEdges.second + binEdges.first);
+                    lutObj1 = "JET";
+                  }
+                    break;
+
+                  case gtTau: {
+                    candCaloVec = m_uGtB->getCandL1Tau();
+                    phiIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwPhi();
+                    etaIndex1 =  (candCaloVec->at(bxEval,obj1Index))->hwEta();
+                    etIndex1  =  (candCaloVec->at(bxEval,obj1Index))->hwPt();
+                    etaBin1 = etaIndex1;
+                    if(etaBin1<0) etaBin1 = m_gtScales->getTAUScales().etaBins.size() + etaBin1;
+                    etBin1 = etIndex1;
+                    int ssize = m_gtScales->getTAUScales().etBins.size();
+                    if (etBin1 >= ssize){ 
+                      LogTrace("L1TGlobal") 
+                      << "tau2 hw et" << etBin1 << " out of scale range.  Setting to maximum.";
+                      etBin1 = ssize-1; 			  
+                    } 
+                    			
+                    // Determine Floating Pt numbers for floating point caluclation
+                    std::pair<double, double> binEdges = m_gtScales->getTAUScales().phiBins.at(phiIndex1);
+                    phi1Phy = 0.5*(binEdges.second + binEdges.first);			
+                    binEdges = m_gtScales->getTAUScales().etaBins.at(etaBin1);
+                    eta1Phy = 0.5*(binEdges.second + binEdges.first);		
+                    binEdges = m_gtScales->getTAUScales().etBins.at(etBin1);
+                    et1Phy = 0.5*(binEdges.second + binEdges.first);	
+                    lutObj1 = "TAU";
+                  }
+                    break;
+                  default: {
+                  }  
+                    break;
+
+                } //end switch on calo type.
+ 
+                   
+                phiORIndex1 = phiIndex1;
+                etaORIndex1 = etaIndex1;
+
+                //If needed convert calo scales to muon scales for comparison
+                if(convertCaloScales) {
+		   
+                  std::string lutName = lutObj1;
+                  lutName += "-MU";
+                  long long tst = m_gtScales->getLUT_CalMuEta(lutName,etaBin1);
+                  LogDebug("L1TGlobal") << lutName <<"  EtaCal = " << etaIndex1 << " EtaMu = " << tst << std::endl; 
+                  etaIndex1 = tst;
+                  tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex1);
+                  LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex1 << " PhiMu = " << tst << std::endl;
+                  phiIndex1 = tst;
+
+                }
+
+                //If needed convert calo scales to muon scales for comparison
+                if(convertCaloScalesForOverlapRemovalFromLeg1) {
+                  phiORIndex1 = phiIndex1;
+                  etaORIndex1 = etaIndex1;
+		   		  
+                }
+
+
+              }  // end case CondCalo
+                break;
+              case CondEnergySum: {
+
+                LogDebug("L1TGlobal") << "Looking at second Condition as Energy Sum: " << cndObjTypeVec[1] << std::endl;
+                etSumCond = true;
+		   
+                //Stupid mapping between enum types for energy sums.
+                l1t::EtSum::EtSumType type;
+
+                switch( cndObjTypeVec[1] ){
+                case gtETM:
+                  type = l1t::EtSum::EtSumType::kMissingEt;
+                  lutObj1 = "ETM";
+                  break;
+                case gtETT:
+                  type = l1t::EtSum::EtSumType::kTotalEt;
+                  lutObj1 = "ETT";
+                  break;
+                case gtETTem:
+                  type = l1t::EtSum::EtSumType::kTotalEtEm;
+                  lutObj1 = "ETTem";
+                  break;
+                case gtHTM:
+                  type = l1t::EtSum::EtSumType::kMissingHt;
+                  lutObj1 = "HTM";
+                  break;
+                case gtHTT:
+                  type = l1t::EtSum::EtSumType::kTotalHt;
+                  lutObj1 = "HTT";
+                  break;
+                case gtETMHF:
+                  type = l1t::EtSum::EtSumType::kMissingEtHF;
+                  lutObj1 = "ETMHF";
+                  break;
+                case gtMinBiasHFP0:
+                case gtMinBiasHFM0:
+                case gtMinBiasHFP1:
+                case gtMinBiasHFM1:
+                  type = l1t::EtSum::EtSumType::kMinBiasHFP0;
+                  lutObj1 = "MinBias";
+                  break;
+                default:
+                  edm::LogError("L1TGlobal")
+                    << "\n  Error: "
+                    << "Unmatched object type from template to EtSumType, cndObjTypeVec[1] = "
+                    << cndObjTypeVec[1]
+                    << std::endl;
+                  type = l1t::EtSum::EtSumType::kTotalEt;
+                  break;
+                }
+
+                candEtSumVec = m_uGtB->getCandL1EtSum();
+                 
+                LogDebug("L1TGlobal") << "obj " << lutObj1 << " Vector Size " << candEtSumVec->size(bxEval) << std::endl; 
+                for( int iEtSum=0; iEtSum < (int)candEtSumVec->size(bxEval); iEtSum++) {
+                  if( (candEtSumVec->at(bxEval,iEtSum))->getType() == type ) {
+                    phiIndex1 =  (candEtSumVec->at(bxEval,iEtSum))->hwPhi();
+                    etaIndex1 =  (candEtSumVec->at(bxEval,iEtSum))->hwEta();
+                    etIndex1  =  (candEtSumVec->at(bxEval,iEtSum))->hwPt(); 
+
+                    // Determine Floating Pt numbers for floating point caluclation
+                    
+                    if(cndObjTypeVec[1] == gtETM) {
+                      std::pair<double, double> binEdges = m_gtScales->getETMScales().phiBins.at(phiIndex1);
+                      phi1Phy = 0.5*(binEdges.second + binEdges.first);
+                      eta1Phy = 0.; //No Eta for Energy Sums
+
+                      etBin1 = etIndex1;
+                      int ssize = m_gtScales->getETMScales().etBins.size();
+                      assert(ssize > 0);
+                      if (etBin1 >= ssize){ etBin1 = ssize-1; } 			   
+
+                      binEdges = m_gtScales->getETMScales().etBins.at(etBin1);
+                      et1Phy = 0.5*(binEdges.second + binEdges.first);
+                    } else if(cndObjTypeVec[1] == gtHTM) {
+                      std::pair<double, double> binEdges = m_gtScales->getHTMScales().phiBins.at(phiIndex1);
+                      phi1Phy = 0.5*(binEdges.second + binEdges.first);
+                      eta1Phy = 0.; //No Eta for Energy Sums
+
+                      etBin1 = etIndex1;
+                      int ssize = m_gtScales->getHTMScales().etBins.size();
+                      assert(ssize > 0);
+                    if (etBin1 >= ssize){ etBin1 = ssize-1; } 			   
+
+                      binEdges = m_gtScales->getHTMScales().etBins.at(etBin1);
+                      et1Phy = 0.5*(binEdges.second + binEdges.first);
+                    } else if(cndObjTypeVec[1] == gtETMHF) {
+                      std::pair<double, double> binEdges = m_gtScales->getETMHFScales().phiBins.at(phiIndex1);
+                      phi1Phy = 0.5*(binEdges.second + binEdges.first);
+                      eta1Phy = 0.; //No Eta for Energy Sums
+                      etBin1 = etIndex1;
+                      int ssize = m_gtScales->getETMHFScales().etBins.size();
+                      assert(ssize > 0);
+                      if (etBin1 >= ssize){ etBin1 = ssize-1; } 			   
+                      binEdges = m_gtScales->getETMHFScales().etBins.at(etBin1);
+                      et1Phy = 0.5*(binEdges.second + binEdges.first);
+                    }
+
+                    phiORIndex1 = phiIndex1;
+                    etaORIndex1 = etaIndex1;
+
+                    //If needed convert calo scales to muon scales for comparison (only phi for energy sums)   
+                    if(convertCaloScales) {
+
+                      std::string lutName = lutObj1;
+                      lutName += "-MU";
+                      long long tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex1);
+                      LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex1 << " PhiMu = " << tst << std::endl;
+                      phiIndex1 = tst;
+
+                    }
+                      
+                    //If needed convert calo scales to muon scales for comparison (only phi for energy sums)   
+                    if(convertCaloScalesForOverlapRemovalFromLeg1) {
+                      phiORIndex1 = phiIndex1;
+                    }
+
+                  } //check it is the EtSum we want   
+                } // loop over Etsums
+
+              } // end case EnergySum
+                break;
+              default: {
+                // should not arrive here, there are no correlation conditions defined for this object
+                LogDebug("L1TGlobal") << "Error could not find the Cond Category for Leg 0" << std::endl;
+                return false;
+              }
+                break;
             } //end switch on second leg
 
-		        bool overlapRemovalMatchLeg2 = false;
-		
-		        // ///////////////////////////////////////////////////////////////////////////////////////////
-		  			// loop over overlap-removal leg combination which produced individually "true" as Type1s 
-		  			// ///////////////////////////////////////////////////////////////////////////////////////////
-		  			for (std::vector<SingleCombInCond>::const_iterator it2Comb = cond2Comb.begin(); it2Comb != cond2Comb.end(); it2Comb++) {
-		  			
-		  			    // Type1s: there is 1 object only, no need for a loop, index 0 should be OK in (*it2Comb)[0]
-		  			    // ... but add protection to not crash
-		  			    int obj2Index = -1;
-		  			
-		  			    if ((*it2Comb).size() > 0) {
-		  			        obj2Index = (*it2Comb)[0];
-		  			    } else {
-		  			        LogTrace("L1TGlobal")
-		  			                << "\n  SingleCombInCond (*it2Comb).size() "
-		  			                << ((*it2Comb).size()) << std::endl;
-		  			        return false;
-		  			    }
-		  			
-		  			    // Collect the information on the overlap-removal leg 
-		  			    switch (cond2Categ) {
-		  			        case CondMuon: {
-		  			            lutObj2 = "MU";
-		  			            candMuVec = m_uGtB->getCandL1Mu();
-		  			            phiIndex2 =  (candMuVec->at(bxEval,obj2Index))->hwPhi(); //(*candMuVec)[obj2Index]->phiIndex();
-		  			            etaIndex2 =  (candMuVec->at(bxEval,obj2Index))->hwEta();
-		  			    	int etaBin2 = etaIndex2;
-		  			    	if(etaBin2<0) etaBin2 = m_gtScales->getMUScales().etaBins.size() + etaBin2; //twos complement		
-		  			            //LogDebug("L1TGlobal") << "Muon phi" << phiIndex2 << " eta " << etaIndex2 << " etaBin2 = " << etaBin2  << " et " << etIndex2 << std::endl;
-		  			    	
-		  			    	
-		  			    	// Determine Floating Pt numbers for floating point caluclation
-		  			    	std::pair<double, double> binEdges = m_gtScales->getMUScales().phiBins.at(phiIndex2);
-		  			    	phi2Phy = 0.5*(binEdges.second + binEdges.first);
-		  			    	binEdges = m_gtScales->getMUScales().etaBins.at(etaBin2);
-		  			    	eta2Phy = 0.5*(binEdges.second + binEdges.first);		
-		  			
-		  			    	LogDebug("L1TGlobal") << "Found all quantities for the muon 0" << std::endl;		
-		  			        }
-		  			            break;
-		  			
-		  			         // Calorimeter Objects (EG, Jet, Tau)
-		  			        case CondCalo: {
-		  			           
-		  			           switch(cndObjTypeVec[0]) {
-		  			             case gtEG: {
-		  			    	    lutObj2 = "EG";
-		  			    	    candCaloVec = m_uGtB->getCandL1EG();
-		  			    	    phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
-		  			    	    etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
-		  			    	    if(etaBin2<0) etaBin2 = m_gtScales->getEGScales().etaBins.size() + etaBin2;
-		  			                //LogDebug("L1TGlobal") << "EG0 phi" << phiIndex2 << " eta " << etaIndex2 << " etaBin2 = " << etaBin2 << " et " << etIndex2 << std::endl;
-		  			
-		  			    	    // Determine Floating Pt numbers for floating point caluclation
-		  			    	    std::pair<double, double> binEdges = m_gtScales->getEGScales().phiBins.at(phiIndex2);
-		  			    	    phi2Phy = 0.5*(binEdges.second + binEdges.first);					    
-		  			    	    binEdges = m_gtScales->getEGScales().etaBins.at(etaBin2);
-		  			    	    eta2Phy = 0.5*(binEdges.second + binEdges.first);		
-		  			    	    
-		  			    	 }
-		  			    	   break;
-		  			    	 case gtJet: {
-		  			    	    lutObj2 = "JET";
-		  			    	    candCaloVec = m_uGtB->getCandL1Jet();
-		  			    	    phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
-		  			    	    etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
-		  			    	    etaBin2 = etaIndex2;
-		  			    	    if(etaBin2<0) etaBin2 = m_gtScales->getJETScales().etaBins.size() + etaBin2;
-		  			
-		  			    	    // Determine Floating Pt numbers for floating point caluclation
-		  			    	    std::pair<double, double> binEdges = m_gtScales->getJETScales().phiBins.at(phiIndex2);
-		  			    	    phi2Phy = 0.5*(binEdges.second + binEdges.first);			
-		  			    	    binEdges = m_gtScales->getJETScales().etaBins.at(etaBin2);
-		  			    	    eta2Phy = 0.5*(binEdges.second + binEdges.first);		
-		  			    	    
-		  			    	 }
-		  			    	   break;
-		  			    	 case gtTau: {
-		  			    	    candCaloVec = m_uGtB->getCandL1Tau();
-		  			    	    phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
-		  			    	    etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
-		  			    	    if(etaBin2<0) etaBin2 = m_gtScales->getTAUScales().etaBins.size() + etaBin2;
-		  			    	    
-		  			    	    // Determine Floating Pt numbers for floating point caluclation
-		  			    	    std::pair<double, double> binEdges = m_gtScales->getTAUScales().phiBins.at(phiIndex2);
-		  			    	    phi2Phy = 0.5*(binEdges.second + binEdges.first);
-		  			    	    binEdges = m_gtScales->getTAUScales().etaBins.at(etaBin2);
-		  			    	    eta2Phy = 0.5*(binEdges.second + binEdges.first);		
-		  			    	    lutObj2 = "TAU";
-		  			    	 }
-		  			               break;
-		  			    	 default: {
-		  			    	 }  
-		  			               break;
-		  			           } //end switch on calo type.
-		  			    	
-		  			            //If needed convert calo scales to muon scales for comparison
-		  			            if(convertCaloScales) {
-		  			    	  std::string lutName = lutObj2;
-		  			    	  lutName += "-MU";
-		  			    	  long long tst = m_gtScales->getLUT_CalMuEta(lutName,etaBin2);
-		  			    	  LogDebug("L1TGlobal") << lutName <<"  EtaCal = " << etaIndex2 << " etaBin2 = " << etaBin2 << " EtaMu = " << tst << std::endl; 
-		  			    	  etaIndex2 = tst;
-		  			    	  
-		  			
-		  			    	  tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex2);
-		  			    	  LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex2 << " PhiMu = " << tst << std::endl;
-		  			    	  phiIndex2 = tst;
-		  			    	   		  
-		  			            }
-		  			
-		  			        }
-		  			            break;
-		  			    	
-		  			         // Energy Sums		
-		  			        case CondEnergySum: {
-		  			
-		  			            etSumCond = true;
-		  			    	//Stupid mapping between enum types for energy sums.
-		  			    	l1t::EtSum::EtSumType type;
-		  			    	switch( cndObjTypeVec[0] ){
-		  			    	case gtETM:
-		  			    	  type = l1t::EtSum::EtSumType::kMissingEt;
-		  			    	  lutObj2 = "ETM";
-		  			    	  break;
-		  			    	case gtETT:
-		  			    	  type = l1t::EtSum::EtSumType::kTotalEt;
-		  			    	  lutObj2 = "ETT"; 
-		  			    	  break;
-		  			    	case gtETTem:
-		  			    	  type = l1t::EtSum::EtSumType::kTotalEtEm;
-		  			    	  lutObj2 = "ETTem"; //should this be just ETT (share LUTs?) Can't be used for CorrCond anyway since now directional information
-		  			    	  break;		  
-		  			    	case gtHTM:
-		  			    	  type = l1t::EtSum::EtSumType::kMissingHt;
-		  			    	  lutObj2 = "HTM";
-		  			    	  break;
-		  			    	case gtHTT:
-		  			    	  type = l1t::EtSum::EtSumType::kTotalHt;
-		  			    	  lutObj2 = "HTT";
-		  			    	  break;
-		  			    	case gtETMHF:
-		  			    	  type = l1t::EtSum::EtSumType::kMissingEtHF;
-		  			    	  lutObj2 = "ETMHF"; 
-		  			    	  break;
-		  			    	case gtMinBiasHFP0:
-		  			    	case gtMinBiasHFM0:
-		  			    	case gtMinBiasHFP1:
-		  			    	case gtMinBiasHFM1:
-		  			    	  type = l1t::EtSum::EtSumType::kMinBiasHFP0;
-		  			    	  lutObj2 = "MinBias"; //??Fix?? Not a valid LUT type Can't be used for CorrCond anyway since now directional information
-		  			    	  break;
-		  			    	default:
-		  			    	  edm::LogError("L1TGlobal")
-		  			    	    << "\n  Error: "
-		  			    	    << "Unmatched object type from template to EtSumType, cndObjTypeVec[0] = "
-		  			    	    << cndObjTypeVec[0]
-		  			    	    << std::endl;
-		  			    	  type = l1t::EtSum::EtSumType::kTotalEt;
-		  			    	  break;
-		  			    	}
-		  			
-		  			            candEtSumVec = m_uGtB->getCandL1EtSum();
-		  			    	
-		  			            for( int iEtSum=0; iEtSum < (int)candEtSumVec->size(bxEval); iEtSum++) {
-		  			    	  if( (candEtSumVec->at(bxEval,iEtSum))->getType() == type ) {
-		  			                phiIndex2 =  (candEtSumVec->at(bxEval,iEtSum))->hwPhi();
-		  			                etaIndex2 =  (candEtSumVec->at(bxEval,iEtSum))->hwEta();
-		  			
-		  			                //  Get the floating point numbers
-		  			    	    if(cndObjTypeVec[0] == gtETM ) {
-		  			    	      std::pair<double, double> binEdges = m_gtScales->getETMScales().phiBins.at(phiIndex2);
-		  			    	      phi2Phy = 0.5*(binEdges.second + binEdges.first);
-		  			    	      eta2Phy = 0.; //No Eta for Energy Sums
-		  			    	      
-		  			    	    } else if (cndObjTypeVec[0] == gtHTM) {
-		  			    	      std::pair<double, double> binEdges = m_gtScales->getHTMScales().phiBins.at(phiIndex2);
-		  			    	      phi2Phy = 0.5*(binEdges.second + binEdges.first);
-		  			    	      eta2Phy = 0.; //No Eta for Energy Sums
-		  			    	      
-		  			    	    } else if (cndObjTypeVec[0] == gtETMHF) {
-		  			    	      std::pair<double, double> binEdges = m_gtScales->getETMHFScales().phiBins.at(phiIndex2);
-		  			    	      phi2Phy = 0.5*(binEdges.second + binEdges.first);
-		  			    	      eta2Phy = 0.; //No Eta for Energy Sums
-		  			    	      
-		  			    	    } 
-		  			
-		  			                //If needed convert calo scales to muon scales for comparison (only phi for energy sums)
-		  			                if(convertCaloScales) {
-		  			
-		  			    	       std::string lutName = lutObj2;
-		  			    	       lutName += "-MU";
-		  			    	       long long tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex2);
-		  			    	       LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex2 << " PhiMu = " << tst << std::endl;
-		  			    	       phiIndex2 = tst;
-		  			
-		  			                }
-		  			
-		  			              } //check it is the EtSum we want   
-		  			            } // loop over Etsums
-		  			    	
-		  			        }
-		  			            break;
-		  			    	
-		  			    	
-		  			        default: {
-		  			            // should not arrive here, there are no correlation conditions defined for this object
-		  			    	LogDebug("L1TGlobal") << "Error could not find the Cond Category for Leg 3" << std::endl;
-		  			            return false;
-		  			        }
-		  			            break;
-		  			    } //end switch on overlap-removal leg type
-		
-		            // /////////////////////////////////////////////////////////////////////////////////////////
-		            //
-		            // here check if there is a match of 2st leg with overlap removal object ...if yes, continue
-		            //
-		            // /////////////////////////////////////////////////////////////////////////////////////////
-		            // These all require some delta eta and phi calculations.  Do them first...for now real calculation but need to
-		            // revise this to line up with firmware calculations.
-		            double deltaPhiPhy  = fabs(phi2Phy - phi1Phy);
-		            if(deltaPhiPhy> M_PI) deltaPhiPhy = 2.*M_PI - deltaPhiPhy;
-		            double deltaEtaPhy  = fabs(eta2Phy - eta1Phy);
-		             
-		            
-		            // Deter the integer based delta eta and delta phi
-		            int deltaPhiFW = abs(phiORIndex1 - phiIndex2);
-		            if(deltaPhiFW>=phiBound) deltaPhiFW = 2*phiBound - deltaPhiFW;
-		            std::string lutName = lutObj1;
-		            lutName += "-";
-		            lutName += lutObj2;
-		            long long deltaPhiLUT = m_gtScales->getLUT_DeltaPhi(lutName,deltaPhiFW);
-		            unsigned int precDeltaPhiLUT = m_gtScales->getPrec_DeltaPhi(lutName);
-		            
-		            int deltaEtaFW = abs(etaORIndex1 - etaIndex2);
-		            long long deltaEtaLUT = 0;
-		            unsigned int precDeltaEtaLUT = 0;
-		            if(!etSumCond) {
-		              deltaEtaLUT = m_gtScales->getLUT_DeltaEta(lutName,deltaEtaFW);
-		              precDeltaEtaLUT = m_gtScales->getPrec_DeltaEta(lutName);
-		            }
-		            
-		            LogDebug("L1TGlobal") << "Obj1 phiFW = " << phiORIndex1 << " Obj2 phiFW = " << phiIndex2 << "\n"
-		            << "    DeltaPhiFW = " << deltaPhiFW << "\n"
-		            << "    LUT Name = " << lutName << " Prec = " << precDeltaPhiLUT << "  DeltaPhiLUT = " << deltaPhiLUT << "\n"
-		            << "Obj1 etaFW = " << etaIndex1 << " Obj1 etaFW = " << etaIndex1 << "\n"
-		            << "    DeltaEtaFW = " << deltaEtaFW << "\n"
-		            << "    LUT Name = " << lutName << " Prec = " << precDeltaEtaLUT << "  DeltaEtaLUT = " << deltaEtaLUT << std::endl;
-		            
-  		          overlapRemovalMatchLeg2 = false;
-		            
-		            // If there is a OverlapRemovalDeltaEta cut, check it.
-		            // /////////////////////////////////////////////////
-		            if(corrPar.corrCutType & 0x10) {
-		                  
-		                  unsigned int preShift = precDeltaEtaLUT - corrPar.precOverlapRemovalEtaCut;
-		                  LogDebug("L1TGlobal")    << "    Testing Delta Eta Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalEtaCut <<"\n"
-		                			   << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
-		                			   << "    Precision Shift = " << preShift << "\n"
-		                			   << "    deltaEta (shift)= " << (deltaEtaLUT/pow(10,preShift+corrPar.precOverlapRemovalEtaCut)) << "\n"
-		                			   << "    deltaEtaPhy = " <<  deltaEtaPhy << std::endl; 		      
-		                  
-		                  //if(preShift>0) deltaEtaLUT /= pow(10,preShift);
-		                  if( deltaEtaLUT >= (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) &&
-		                      deltaEtaLUT <= (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) ) {
-		            
-  		                   overlapRemovalMatchLeg2 = true;
-		                     LogDebug("L1TGlobal") << "    Passed Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
-		                       		  
-		                 } else {
-		                    
-  		                   overlapRemovalMatchLeg2 = false;
-		                     LogDebug("L1TGlobal")  << "    Failed Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
-		                     continue;
-		                 }	
-		            }
-		            // If there is a OverlapRemovalDeltaPhi cut, check it.
-		            // /////////////////////////////////////////////////
-		            if(corrPar.corrCutType & 0x20) {
-		               	
-		                  unsigned int preShift = precDeltaPhiLUT - corrPar.precOverlapRemovalPhiCut;	  
-		                  LogDebug("L1TGlobal")  << "    Testing Delta Phi Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalPhiCut <<"\n"
-		                			   << "    deltaPhiLUT = " << deltaPhiLUT  << "\n"
-		                			   << "    Precision Shift = " << preShift << "\n"
-		                			   << "    deltaPhi (shift)= " << (deltaPhiLUT/pow(10,preShift+corrPar.precOverlapRemovalPhiCut)) << "\n"
-		                			   << "    deltaPhiPhy = " <<  deltaPhiPhy << std::endl;  		      
-		                  
-		                  //if(preShift>0) deltaPhiLUT /= pow(10,preShift);
-		                  if( deltaPhiLUT >= (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) &&
-		                      deltaPhiLUT <= (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) ) {
-		            
-  		                   overlapRemovalMatchLeg2 = true;
-		                     LogDebug("L1TGlobal")  << "    Passed Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
-		                    
-		                 } else {
-		                    
-  		                   overlapRemovalMatchLeg2 = false;
-		                     LogDebug("L1TGlobal") << "    Failed Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
-		                     continue;
-		                 }	
-		             }
-		             //if there is a OverlapRemovalDeltaR cut, check it.
-		             // /////////////////////////////////////////////////
-		             if(corrPar.corrCutType & 0x40) {
-		               	
-		                  //Assumes Delta Eta and Delta Phi LUTs have the same precision
-		                  unsigned int preShift = 2*precDeltaPhiLUT  - corrPar.precOverlapRemovalDRCut;	  
-		                  double deltaRSqPhy = deltaPhiPhy*deltaPhiPhy + deltaEtaPhy*deltaEtaPhy;
-		                  long long deltaRSq = deltaEtaLUT*deltaEtaLUT + deltaPhiLUT*deltaPhiLUT;
-		                		  
-		                  LogDebug("L1TGlobal") << "    Testing Delta R Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalDRCut <<"\n"
-		                			   << "    deltaPhiLUT = " << deltaPhiLUT << "\n"
-		                			   << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
-		                			   << "    deltaRSqLUT = " << deltaRSq <<  "\n"
-		                			   << "    Precision Shift = " << preShift << "\n" 
-		                			   << "    deltaRSqLUT (shift)= " << (deltaRSq/pow(10,preShift+corrPar.precDRCut))	<< "\n"				   
-		                			   << "    deltaRSqPhy = " << deltaRSqPhy << std::endl;		      
-		                  
-		                  //if(preShift>0) deltaRSq /= pow(10,preShift);
-		                  if( deltaRSq >= (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) &&
-		                      deltaRSq <= (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) ) {
-		            
-  		                   overlapRemovalMatchLeg2 = true;
-		                     LogDebug("L1TGlobal") << "    Passed Delta R Cut [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
-		                        
-		                 } else {
-		                    
-  		                   overlapRemovalMatchLeg2 = false;
-		                     LogDebug("L1TGlobal") << "    Failed Delta R Cut [" << (int)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
-		                                           << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
-		                     continue;
-		                 }	
-		            }  	 
+            bool overlapRemovalMatchLeg2 = false;
+            
+            // ///////////////////////////////////////////////////////////////////////////////////////////
+            // loop over overlap-removal leg combination which produced individually "true" as Type1s 
+            // ///////////////////////////////////////////////////////////////////////////////////////////
+            for (std::vector<SingleCombInCond>::const_iterator it2Comb = cond2Comb.begin(); it2Comb != cond2Comb.end(); it2Comb++) {
 
-  			    } // end loop over combinations in overlap-removal leg.  
+              // Type1s: there is 1 object only, no need for a loop, index 0 should be OK in (*it2Comb)[0]
+              // ... but add protection to not crash
+              int obj2Index = -1;
+
+              if ((*it2Comb).size() > 0) {
+                  obj2Index = (*it2Comb)[0];
+              } else {
+                LogTrace("L1TGlobal")
+                << "\n  SingleCombInCond (*it2Comb).size() "
+                << ((*it2Comb).size()) << std::endl;
+                return false;
+              }
+            
+              // Collect the information on the overlap-removal leg 
+              switch (cond2Categ) {
+                case CondMuon: {
+                  lutObj2 = "MU";
+                  candMuVec = m_uGtB->getCandL1Mu();
+                  phiIndex2 =  (candMuVec->at(bxEval,obj2Index))->hwPhi(); //(*candMuVec)[obj2Index]->phiIndex();
+                  etaIndex2 =  (candMuVec->at(bxEval,obj2Index))->hwEta();
+                	int etaBin2 = etaIndex2;
+                	if(etaBin2<0) etaBin2 = m_gtScales->getMUScales().etaBins.size() + etaBin2; //twos complement		
+                  //LogDebug("L1TGlobal") << "Muon phi" << phiIndex2 << " eta " << etaIndex2 << " etaBin2 = " << etaBin2  << " et " << etIndex2 << std::endl;
+
+                	// Determine Floating Pt numbers for floating point caluclation
+                	std::pair<double, double> binEdges = m_gtScales->getMUScales().phiBins.at(phiIndex2);
+                	phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                	binEdges = m_gtScales->getMUScales().etaBins.at(etaBin2);
+                	eta2Phy = 0.5*(binEdges.second + binEdges.first);		
+
+                	LogDebug("L1TGlobal") << "Found all quantities for the muon 0" << std::endl;		
+                }
+                  break;
+            
+                // Calorimeter Objects (EG, Jet, Tau)
+                case CondCalo: {
+                       
+                  switch(cndObjTypeVec[0]) {
+
+                    case gtEG: {
+                      lutObj2 = "EG";
+                      candCaloVec = m_uGtB->getCandL1EG();
+                      phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
+                      etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
+                      if(etaBin2<0) etaBin2 = m_gtScales->getEGScales().etaBins.size() + etaBin2;
+                      //LogDebug("L1TGlobal") << "EG0 phi" << phiIndex2 << " eta " << etaIndex2 << " etaBin2 = " << etaBin2 << " et " << etIndex2 << std::endl;
+
+                      // Determine Floating Pt numbers for floating point caluclation
+                      std::pair<double, double> binEdges = m_gtScales->getEGScales().phiBins.at(phiIndex2);
+                      phi2Phy = 0.5*(binEdges.second + binEdges.first);					    
+                      binEdges = m_gtScales->getEGScales().etaBins.at(etaBin2);
+                      eta2Phy = 0.5*(binEdges.second + binEdges.first);		
+                    }
+                      break;
+
+                    case gtJet: {
+                      lutObj2 = "JET";
+                      candCaloVec = m_uGtB->getCandL1Jet();
+                      phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
+                      etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
+                      etaBin2 = etaIndex2;
+                      if(etaBin2<0) etaBin2 = m_gtScales->getJETScales().etaBins.size() + etaBin2;
+                      // Determine Floating Pt numbers for floating point caluclation
+                      std::pair<double, double> binEdges = m_gtScales->getJETScales().phiBins.at(phiIndex2);
+                      phi2Phy = 0.5*(binEdges.second + binEdges.first);			
+                      binEdges = m_gtScales->getJETScales().etaBins.at(etaBin2);
+                      eta2Phy = 0.5*(binEdges.second + binEdges.first);		
+                    }
+                      break;
+                    case gtTau: {
+                      candCaloVec = m_uGtB->getCandL1Tau();
+                      phiIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwPhi();
+                      etaIndex2 =  (candCaloVec->at(bxEval,obj2Index))->hwEta();
+                      if(etaBin2<0) etaBin2 = m_gtScales->getTAUScales().etaBins.size() + etaBin2;
+                      
+                      // Determine Floating Pt numbers for floating point caluclation
+                      std::pair<double, double> binEdges = m_gtScales->getTAUScales().phiBins.at(phiIndex2);
+                      phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                      binEdges = m_gtScales->getTAUScales().etaBins.at(etaBin2);
+                      eta2Phy = 0.5*(binEdges.second + binEdges.first);		
+                      lutObj2 = "TAU";
+                    }
+                     break;
+                    default: {
+                    }  
+                      break;
+
+                  } //end switch on calo type.
+
+                  //If needed convert calo scales to muon scales for comparison
+                  if(convertCaloScales) {
+                    std::string lutName = lutObj2;
+                    lutName += "-MU";
+                    long long tst = m_gtScales->getLUT_CalMuEta(lutName,etaBin2);
+                    LogDebug("L1TGlobal") << lutName <<"  EtaCal = " << etaIndex2 << " etaBin2 = " << etaBin2 << " EtaMu = " << tst << std::endl; 
+                    etaIndex2 = tst;
+
+                    tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex2);
+                    LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex2 << " PhiMu = " << tst << std::endl;
+                    phiIndex2 = tst;
+                	   		  
+                }
+
+              }
+                break;
+
+              // Energy Sums		
+              case CondEnergySum: {
+
+                  etSumCond = true;
+                	//Stupid mapping between enum types for energy sums.
+                	l1t::EtSum::EtSumType type;
+                	switch( cndObjTypeVec[0] ){
+                	case gtETM:
+                	  type = l1t::EtSum::EtSumType::kMissingEt;
+                	  lutObj2 = "ETM";
+                	  break;
+                	case gtETT:
+                	  type = l1t::EtSum::EtSumType::kTotalEt;
+                	  lutObj2 = "ETT"; 
+                	  break;
+                	case gtETTem:
+                	  type = l1t::EtSum::EtSumType::kTotalEtEm;
+                	  lutObj2 = "ETTem"; //should this be just ETT (share LUTs?) Can't be used for CorrCond anyway since now directional information
+                	  break;		  
+                	case gtHTM:
+                	  type = l1t::EtSum::EtSumType::kMissingHt;
+                	  lutObj2 = "HTM";
+                	  break;
+                	case gtHTT:
+                	  type = l1t::EtSum::EtSumType::kTotalHt;
+                	  lutObj2 = "HTT";
+                	  break;
+                	case gtETMHF:
+                	  type = l1t::EtSum::EtSumType::kMissingEtHF;
+                	  lutObj2 = "ETMHF"; 
+                	  break;
+                	case gtMinBiasHFP0:
+                	case gtMinBiasHFM0:
+                	case gtMinBiasHFP1:
+                	case gtMinBiasHFM1:
+                	  type = l1t::EtSum::EtSumType::kMinBiasHFP0;
+                	  lutObj2 = "MinBias"; //??Fix?? Not a valid LUT type Can't be used for CorrCond anyway since now directional information
+                	  break;
+                	default:
+                	  edm::LogError("L1TGlobal")
+                	    << "\n  Error: "
+                	    << "Unmatched object type from template to EtSumType, cndObjTypeVec[0] = "
+                	    << cndObjTypeVec[0]
+                	    << std::endl;
+                	  type = l1t::EtSum::EtSumType::kTotalEt;
+                	  break;
+                	}
+
+                  candEtSumVec = m_uGtB->getCandL1EtSum();
+
+                  for( int iEtSum=0; iEtSum < (int)candEtSumVec->size(bxEval); iEtSum++) {
+                    if( (candEtSumVec->at(bxEval,iEtSum))->getType() == type ) {
+                      phiIndex2 =  (candEtSumVec->at(bxEval,iEtSum))->hwPhi();
+                      etaIndex2 =  (candEtSumVec->at(bxEval,iEtSum))->hwEta();
+
+                      //  Get the floating point numbers
+                      if(cndObjTypeVec[0] == gtETM ) {
+                        std::pair<double, double> binEdges = m_gtScales->getETMScales().phiBins.at(phiIndex2);
+                        phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                        eta2Phy = 0.; //No Eta for Energy Sums
+                        
+                      } else if (cndObjTypeVec[0] == gtHTM) {
+                        std::pair<double, double> binEdges = m_gtScales->getHTMScales().phiBins.at(phiIndex2);
+                        phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                        eta2Phy = 0.; //No Eta for Energy Sums
+
+                      } else if (cndObjTypeVec[0] == gtETMHF) {
+                        std::pair<double, double> binEdges = m_gtScales->getETMHFScales().phiBins.at(phiIndex2);
+                        phi2Phy = 0.5*(binEdges.second + binEdges.first);
+                        eta2Phy = 0.; //No Eta for Energy Sums
+
+                      } 
+
+                      //If needed convert calo scales to muon scales for comparison (only phi for energy sums)
+                      if(convertCaloScales) {
+                        std::string lutName = lutObj2;
+                        lutName += "-MU";
+                        long long tst = m_gtScales->getLUT_CalMuPhi(lutName,phiIndex2);
+                        LogDebug("L1TGlobal") << lutName <<"  PhiCal = " << phiIndex2 << " PhiMu = " << tst << std::endl;
+                        phiIndex2 = tst;
+                      }
+
+                    } //check it is the EtSum we want   
+                  } // loop over Etsums
+
+                } // end case CondEnerySum
+                  break;
+                default: {
+                  // should not arrive here, there are no correlation conditions defined for this object
+                	LogDebug("L1TGlobal") << "Error could not find the Cond Category for Leg 3" << std::endl;
+                  return false;
+                }
+                    break;
+              } //end switch on overlap-removal leg type
+            
+              // /////////////////////////////////////////////////////////////////////////////////////////
+              //
+              // here check if there is a match of 2st leg with overlap removal object ...if yes, continue
+              //
+              // /////////////////////////////////////////////////////////////////////////////////////////
+              // These all require some delta eta and phi calculations.  Do them first...for now real calculation but need to
+              // revise this to line up with firmware calculations.
+              double deltaPhiPhy  = fabs(phi2Phy - phi1Phy);
+              if(deltaPhiPhy> M_PI) deltaPhiPhy = 2.*M_PI - deltaPhiPhy;
+              double deltaEtaPhy  = fabs(eta2Phy - eta1Phy);
+              
+              // Deter the integer based delta eta and delta phi
+              int deltaPhiFW = abs(phiORIndex1 - phiIndex2);
+              if(deltaPhiFW>=phiBound) deltaPhiFW = 2*phiBound - deltaPhiFW;
+              std::string lutName = lutObj1;
+              lutName += "-";
+              lutName += lutObj2;
+              long long deltaPhiLUT = m_gtScales->getLUT_DeltaPhi(lutName,deltaPhiFW);
+              unsigned int precDeltaPhiLUT = m_gtScales->getPrec_DeltaPhi(lutName);
+              
+              int deltaEtaFW = abs(etaORIndex1 - etaIndex2);
+              long long deltaEtaLUT = 0;
+              unsigned int precDeltaEtaLUT = 0;
+              if(!etSumCond) {
+                deltaEtaLUT = m_gtScales->getLUT_DeltaEta(lutName,deltaEtaFW);
+                precDeltaEtaLUT = m_gtScales->getPrec_DeltaEta(lutName);
+              }
+              
+              LogDebug("L1TGlobal") << "Obj1 phiFW = " << phiORIndex1 << " Obj2 phiFW = " << phiIndex2 << "\n"
+              << "    DeltaPhiFW = " << deltaPhiFW << "\n"
+              << "    LUT Name = " << lutName << " Prec = " << precDeltaPhiLUT << "  DeltaPhiLUT = " << deltaPhiLUT << "\n"
+              << "Obj1 etaFW = " << etaIndex1 << " Obj1 etaFW = " << etaIndex1 << "\n"
+              << "    DeltaEtaFW = " << deltaEtaFW << "\n"
+              << "    LUT Name = " << lutName << " Prec = " << precDeltaEtaLUT << "  DeltaEtaLUT = " << deltaEtaLUT << std::endl;
+              
+              overlapRemovalMatchLeg2 = false;
+              
+              // If there is a OverlapRemovalDeltaEta cut, check it.
+              // /////////////////////////////////////////////////
+              if(corrPar.corrCutType & 0x10) {
+              
+                unsigned int preShift = precDeltaEtaLUT - corrPar.precOverlapRemovalEtaCut;
+                LogDebug("L1TGlobal")    << "    Testing Delta Eta Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalEtaCut <<"\n"
+                << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
+                << "    Precision Shift = " << preShift << "\n"
+                << "    deltaEta (shift)= " << (deltaEtaLUT/pow(10,preShift+corrPar.precOverlapRemovalEtaCut)) << "\n"
+                << "    deltaEtaPhy = " <<  deltaEtaPhy << std::endl; 		      
+                
+                //if(preShift>0) deltaEtaLUT /= pow(10,preShift);
+                if( deltaEtaLUT >= (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) &&
+                  deltaEtaLUT <= (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) ) {
+                
+                  overlapRemovalMatchLeg2 = true;
+                  LogDebug("L1TGlobal") << "    Passed Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                
+                } else {
+                
+                  overlapRemovalMatchLeg2 = false;
+                  LogDebug("L1TGlobal")  << "    Failed Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                  continue;
+                }	
+              }
+              // If there is a OverlapRemovalDeltaPhi cut, check it.
+              // /////////////////////////////////////////////////
+              if(corrPar.corrCutType & 0x20) {
+
+                unsigned int preShift = precDeltaPhiLUT - corrPar.precOverlapRemovalPhiCut;	  
+                LogDebug("L1TGlobal")  << "    Testing Delta Phi Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalPhiCut <<"\n"
+                << "    deltaPhiLUT = " << deltaPhiLUT  << "\n"
+                << "    Precision Shift = " << preShift << "\n"
+                << "    deltaPhi (shift)= " << (deltaPhiLUT/pow(10,preShift+corrPar.precOverlapRemovalPhiCut)) << "\n"
+                << "    deltaPhiPhy = " <<  deltaPhiPhy << std::endl;  		      
+                
+                //if(preShift>0) deltaPhiLUT /= pow(10,preShift);
+                if( deltaPhiLUT >= (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) &&
+                  deltaPhiLUT <= (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) ) {
+                
+                    overlapRemovalMatchLeg2 = true;
+                    LogDebug("L1TGlobal")  << "    Passed Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                    << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                    
+                } else {
+                
+                  overlapRemovalMatchLeg2 = false;
+                  LogDebug("L1TGlobal") << "    Failed Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                  continue;
+                }	
+              }
+
+              //if there is a OverlapRemovalDeltaR cut, check it.
+              // /////////////////////////////////////////////////
+              if(corrPar.corrCutType & 0x40) {
+                 	
+                //Assumes Delta Eta and Delta Phi LUTs have the same precision
+                unsigned int preShift = 2*precDeltaPhiLUT  - corrPar.precOverlapRemovalDRCut;	  
+                double deltaRSqPhy = deltaPhiPhy*deltaPhiPhy + deltaEtaPhy*deltaEtaPhy;
+                long long deltaRSq = deltaEtaLUT*deltaEtaLUT + deltaPhiLUT*deltaPhiLUT;
+                  		  
+                LogDebug("L1TGlobal") << "    Testing Delta R Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalDRCut <<"\n"
+                << "    deltaPhiLUT = " << deltaPhiLUT << "\n"
+                << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
+                << "    deltaRSqLUT = " << deltaRSq <<  "\n"
+                << "    Precision Shift = " << preShift << "\n" 
+                << "    deltaRSqLUT (shift)= " << (deltaRSq/pow(10,preShift+corrPar.precDRCut))	<< "\n"				   
+                << "    deltaRSqPhy = " << deltaRSqPhy << std::endl;		      
+                
+                //if(preShift>0) deltaRSq /= pow(10,preShift);
+                if( deltaRSq >= (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) &&
+                  deltaRSq <= (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) ) {
+
+                  overlapRemovalMatchLeg2 = true;
+                  LogDebug("L1TGlobal") << "    Passed Delta R Cut [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                
+                } else {
+
+                  overlapRemovalMatchLeg2 = false;
+                  LogDebug("L1TGlobal") << "    Failed Delta R Cut [" << (int)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                  << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                  continue;
+                }	
+              }  	 
+            
+            } // end loop over combinations in overlap-removal leg.  
 
             // skip object leg2 if matched with overlap removal object
             // ///////////////////////////////////////////////////////
@@ -1918,138 +1907,137 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                   deltaEtaLUT <= (long long)(corrPar.maxEtaCutValue*pow(10,preShift)) ) {
     
                 LogDebug("L1TGlobal") << "    Passed Delta Eta Cut [" << (long long)(corrPar.minEtaCutValue*pow(10,preShift)) 
-    	                           << "," << (long long)(corrPar.maxEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                << "," << (long long)(corrPar.maxEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
     
-    	       	} else {
-    	    
+              } else {
+
                 LogDebug("L1TGlobal")  << "    Failed Delta Eta Cut [" << (long long)(corrPar.minEtaCutValue*pow(10,preShift)) 
-    	                           << "," << (long long)(corrPar.maxEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                << "," << (long long)(corrPar.maxEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
                 reqResult = false;
               }	
             }
-	          	 
+
             //if there is a delta phi check it.
             if(corrPar.corrCutType & 0x2) {
-	       	
+
               unsigned int preShift = precDeltaPhiLUT - corrPar.precPhiCut;	  
               LogDebug("L1TGlobal")  << "    Testing Delta Phi Cut (" << lutObj0 << "," << lutObj1 << ") [" << (long long)(corrPar.minPhiCutValue*pow(10,preShift)) 
-               << "," << (long long)(corrPar.maxPhiCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precPhiCut <<"\n"
-    				   << "    deltaPhiLUT = " << deltaPhiLUT  << "\n"
-    				   << "    Precision Shift = " << preShift << "\n"
-    				   << "    deltaPhi (shift)= " << (deltaPhiLUT/pow(10,preShift+corrPar.precPhiCut)) << "\n"
-    				   << "    deltaPhiPhy = " <<  deltaPhiPhy << std::endl;  		      
-    	  
+              << "," << (long long)(corrPar.maxPhiCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precPhiCut <<"\n"
+              << "    deltaPhiLUT = " << deltaPhiLUT  << "\n"
+              << "    Precision Shift = " << preShift << "\n"
+              << "    deltaPhi (shift)= " << (deltaPhiLUT/pow(10,preShift+corrPar.precPhiCut)) << "\n"
+              << "    deltaPhiPhy = " <<  deltaPhiPhy << std::endl;  		      
+
               //if(preShift>0) deltaPhiLUT /= pow(10,preShift);
               if( deltaPhiLUT >= (long long)(corrPar.minPhiCutValue*pow(10,preShift)) &&
                   deltaPhiLUT <= (long long)(corrPar.maxPhiCutValue*pow(10,preShift)) ) {
-    
+
                 LogDebug("L1TGlobal")  << "    Passed Delta Phi Cut [" << (long long)(corrPar.minPhiCutValue*pow(10,preShift)) 
                 << "," << (long long)(corrPar.maxPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
-                    
+
               } else {
-		    
+
                 LogDebug("L1TGlobal") << "    Failed Delta Phi Cut [" << (long long)(corrPar.minPhiCutValue*pow(10,preShift)) 
-		                           << "," << (long long)(corrPar.maxPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                << "," << (long long)(corrPar.maxPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
                 reqResult = false;
 
               }	
-           }
-	            	 
-           if(corrPar.corrCutType & 0x4) {
+            }
+
+            if(corrPar.corrCutType & 0x4) {
              	
-        	  //Assumes Delta Eta and Delta Phi LUTs have the same precision
-        	  unsigned int preShift = 2*precDeltaPhiLUT  - corrPar.precDRCut;	  
-        	  double deltaRSqPhy = deltaPhiPhy*deltaPhiPhy + deltaEtaPhy*deltaEtaPhy;
-        	  long long deltaRSq = deltaEtaLUT*deltaEtaLUT + deltaPhiLUT*deltaPhiLUT;
-        			  
-        	  LogDebug("L1TGlobal") << "    Testing Delta R Cut (" << lutObj0 << "," << lutObj1 << ") [" << (long long)(corrPar.minDRCutValue*pow(10,preShift)) 
-        	                           << "," << (long long)(corrPar.maxDRCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precDRCut <<"\n"
-        				   << "    deltaPhiLUT = " << deltaPhiLUT << "\n"
-        				   << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
-        				   << "    deltaRSqLUT = " << deltaRSq <<  "\n"
-        				   << "    Precision Shift = " << preShift << "\n" 
-        				   << "    deltaRSqLUT (shift)= " << (deltaRSq/pow(10,preShift+corrPar.precDRCut))	<< "\n"				   
-        				   << "    deltaRSqPhy = " << deltaRSqPhy << std::endl;		      
-        	  
-        	  //if(preShift>0) deltaRSq /= pow(10,preShift);
-        	  if( deltaRSq >= (long long)(corrPar.minDRCutValue*pow(10,preShift)) &&
-        	      deltaRSq <= (long long)(corrPar.maxDRCutValue*pow(10,preShift)) ) {
-        
-        	     LogDebug("L1TGlobal") << "    Passed Delta R Cut [" << (long long)(corrPar.minDRCutValue*pow(10,preShift)) 
-        	                           << "," << (long long)(corrPar.maxDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
-                              
-        	 } else {
-        	    
-        	     LogDebug("L1TGlobal") << "    Failed Delta R Cut [" << (int)(corrPar.minDRCutValue*pow(10,preShift)) 
-        	                           << "," << (long long)(corrPar.maxDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
-        	     reqResult = false;
-        	 }	
+              //Assumes Delta Eta and Delta Phi LUTs have the same precision
+              unsigned int preShift = 2*precDeltaPhiLUT  - corrPar.precDRCut;	  
+              double deltaRSqPhy = deltaPhiPhy*deltaPhiPhy + deltaEtaPhy*deltaEtaPhy;
+              long long deltaRSq = deltaEtaLUT*deltaEtaLUT + deltaPhiLUT*deltaPhiLUT;
+              	  
+              LogDebug("L1TGlobal") << "    Testing Delta R Cut (" << lutObj0 << "," << lutObj1 << ") [" << (long long)(corrPar.minDRCutValue*pow(10,preShift)) 
+              << "," << (long long)(corrPar.maxDRCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precDRCut <<"\n"
+              << "    deltaPhiLUT = " << deltaPhiLUT << "\n"
+              << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
+              << "    deltaRSqLUT = " << deltaRSq <<  "\n"
+              << "    Precision Shift = " << preShift << "\n" 
+              << "    deltaRSqLUT (shift)= " << (deltaRSq/pow(10,preShift+corrPar.precDRCut))	<< "\n"				   
+              << "    deltaRSqPhy = " << deltaRSqPhy << std::endl;		      
+
+              //if(preShift>0) deltaRSq /= pow(10,preShift);
+              if( deltaRSq >= (long long)(corrPar.minDRCutValue*pow(10,preShift)) &&
+                deltaRSq <= (long long)(corrPar.maxDRCutValue*pow(10,preShift)) ) {
+
+                LogDebug("L1TGlobal") << "    Passed Delta R Cut [" << (long long)(corrPar.minDRCutValue*pow(10,preShift)) 
+                << "," << (long long)(corrPar.maxDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
+
+              } else {
+
+                LogDebug("L1TGlobal") << "    Failed Delta R Cut [" << (int)(corrPar.minDRCutValue*pow(10,preShift)) 
+                << "," << (long long)(corrPar.maxDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
+                reqResult = false;
+              }	
 
           }  	 
 
-	       
           if(corrPar.corrCutType & 0x8) {
-            
-            //invariant mass calculation based on 
-        	  // M = sqrt(2*p1*p2(cosh(eta1-eta2) - cos(phi1 - phi2)))
-        	  // but we calculate (1/2)M^2
-        	  // 
-                        double cosDeltaPhiPhy  = cos(deltaPhiPhy);
-        	  double coshDeltaEtaPhy = cosh(deltaEtaPhy);		  
-        	  double massSqPhy = et0Phy*et1Phy*(coshDeltaEtaPhy - cosDeltaPhiPhy);
-        
-                        long long cosDeltaPhiLUT = m_gtScales->getLUT_Cos(lutName,deltaPhiFW);
-        	  unsigned int precCosLUT = m_gtScales->getPrec_Cos(lutName);
-        	  
-                        long long coshDeltaEtaLUT = m_gtScales->getLUT_Cosh(lutName,deltaEtaFW);
-        	  unsigned int precCoshLUT = m_gtScales->getPrec_Cosh(lutName);
-        	  if(precCoshLUT - precCosLUT != 0) LogDebug("L1TGlobal") << "Warning: Cos and Cosh LUTs on different Precision" << std::endl;
-        	  
-        	  std::string lutName = lutObj0;
-        	  lutName += "-ET";
-        	  long long ptObj0 = m_gtScales->getLUT_Pt(lutName,etIndex0);
-        	  unsigned int precPtLUTObj0 = m_gtScales->getPrec_Pt(lutName);
-        	  
-        	  lutName = lutObj1;
-        	  lutName += "-ET";
-        	  long long ptObj1 = m_gtScales->getLUT_Pt(lutName,etIndex1);
-        	  unsigned int precPtLUTObj1 = m_gtScales->getPrec_Pt(lutName);
-        	  
-        	  // Pt and Angles are at different precission.
-        	  long long massSq = ptObj0*ptObj1*(coshDeltaEtaLUT - cosDeltaPhiLUT);
-        	  
-        	  //Note: There is an assumption here that Cos and Cosh have the same precission
-        	  unsigned int preShift = precPtLUTObj0  + precPtLUTObj1 + precCosLUT - corrPar.precMassCut;	
-        	  
-        	  LogDebug("L1TGlobal") << "    Testing Invaiant Mass (" << lutObj0 << "," << lutObj1 << ") [" << (long long)(corrPar.minMassCutValue*pow(10,preShift)) 
-        	                           << "," << (long long)(corrPar.maxMassCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precMassCut <<"\n"
-        				   << "    deltaPhiLUT  = " << deltaPhiLUT << "  cosLUT  = " << cosDeltaPhiLUT << "\n"
-        				   << "    deltaEtaLUT  = " << deltaEtaLUT << "  coshLUT = " << coshDeltaEtaLUT << "\n"
-        				   << "    etIndex0     = " << etIndex0 << "    pt0LUT      = " << ptObj0 << " PhyEt0 = " << et0Phy  << "\n"
-        				   << "    etIndex1     = " << etIndex1 << "    pt1LUT      = " << ptObj1 << " PhyEt1 = " << et1Phy  <<"\n"
-        				   << "    massSq/2     = " << massSq <<  "\n" 
-        				   << "    Precision Shift = " << preShift << "\n"	
-        				   << "    massSq   (shift)= " << (massSq/pow(10,preShift+corrPar.precMassCut)) << "\n"	      
-        				   << "    deltaPhiPhy  = " << deltaPhiPhy << "  cos() = " << cosDeltaPhiPhy << "\n"
-        				   << "    deltaEtaPhy  = " << deltaEtaPhy << "  cosh()= " << coshDeltaEtaPhy << "\n"
-        				   << "    massSqPhy/2  = " << massSqPhy << "  sqrt(|massSq|) = "<< sqrt(fabs(2.*massSqPhy)) << std::endl; 		      
-        	  
-        	  //if(preShift>0) massSq /= pow(10,preShift);
-        	  if(  massSq > 0. &&
-        	      massSq >= (long long)(corrPar.minMassCutValue*pow(10,preShift)) &&
-        	      massSq <= (long long)(corrPar.maxMassCutValue*pow(10,preShift))  ) {
-        
-        	     LogDebug("L1TGlobal") << "    Passed Invariant Mass Cut [" << (long long)(corrPar.minMassCutValue*pow(10,preShift))
-        	                           << "," << (long long)(corrPar.maxMassCutValue*pow(10,preShift)) << "]" << std::endl;		      
-                              
-        	 } else {
-        	    
-        	     LogDebug("L1TGlobal") << "    Failed Invariant Mass Cut [" << (long long)(corrPar.minMassCutValue*pow(10,preShift)) 
-        	                           << "," << (long long)(corrPar.maxMassCutValue*pow(10,preShift)) << "]" << std::endl;		      
-        	     reqResult = false;
-        	 }	
 
-         } 
+            //invariant mass calculation based on 
+            // M = sqrt(2*p1*p2(cosh(eta1-eta2) - cos(phi1 - phi2)))
+            // but we calculate (1/2)M^2
+            // 
+            double cosDeltaPhiPhy  = cos(deltaPhiPhy);
+            double coshDeltaEtaPhy = cosh(deltaEtaPhy);		  
+            double massSqPhy = et0Phy*et1Phy*(coshDeltaEtaPhy - cosDeltaPhiPhy);
+            
+            long long cosDeltaPhiLUT = m_gtScales->getLUT_Cos(lutName,deltaPhiFW);
+            unsigned int precCosLUT = m_gtScales->getPrec_Cos(lutName);
+            
+            long long coshDeltaEtaLUT = m_gtScales->getLUT_Cosh(lutName,deltaEtaFW);
+            unsigned int precCoshLUT = m_gtScales->getPrec_Cosh(lutName);
+            if(precCoshLUT - precCosLUT != 0) LogDebug("L1TGlobal") << "Warning: Cos and Cosh LUTs on different Precision" << std::endl;
+            
+            std::string lutName = lutObj0;
+            lutName += "-ET";
+            long long ptObj0 = m_gtScales->getLUT_Pt(lutName,etIndex0);
+            unsigned int precPtLUTObj0 = m_gtScales->getPrec_Pt(lutName);
+            
+            lutName = lutObj1;
+            lutName += "-ET";
+            long long ptObj1 = m_gtScales->getLUT_Pt(lutName,etIndex1);
+            unsigned int precPtLUTObj1 = m_gtScales->getPrec_Pt(lutName);
+            
+            // Pt and Angles are at different precission.
+            long long massSq = ptObj0*ptObj1*(coshDeltaEtaLUT - cosDeltaPhiLUT);
+            
+            //Note: There is an assumption here that Cos and Cosh have the same precission
+            unsigned int preShift = precPtLUTObj0  + precPtLUTObj1 + precCosLUT - corrPar.precMassCut;	
+            
+            LogDebug("L1TGlobal") << "    Testing Invaiant Mass (" << lutObj0 << "," << lutObj1 << ") [" << (long long)(corrPar.minMassCutValue*pow(10,preShift)) 
+            << "," << (long long)(corrPar.maxMassCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precMassCut <<"\n"
+            << "    deltaPhiLUT  = " << deltaPhiLUT << "  cosLUT  = " << cosDeltaPhiLUT << "\n"
+            << "    deltaEtaLUT  = " << deltaEtaLUT << "  coshLUT = " << coshDeltaEtaLUT << "\n"
+            << "    etIndex0     = " << etIndex0 << "    pt0LUT      = " << ptObj0 << " PhyEt0 = " << et0Phy  << "\n"
+            << "    etIndex1     = " << etIndex1 << "    pt1LUT      = " << ptObj1 << " PhyEt1 = " << et1Phy  <<"\n"
+            << "    massSq/2     = " << massSq <<  "\n" 
+            << "    Precision Shift = " << preShift << "\n"	
+            << "    massSq   (shift)= " << (massSq/pow(10,preShift+corrPar.precMassCut)) << "\n"	      
+            << "    deltaPhiPhy  = " << deltaPhiPhy << "  cos() = " << cosDeltaPhiPhy << "\n"
+            << "    deltaEtaPhy  = " << deltaEtaPhy << "  cosh()= " << coshDeltaEtaPhy << "\n"
+            << "    massSqPhy/2  = " << massSqPhy << "  sqrt(|massSq|) = "<< sqrt(fabs(2.*massSqPhy)) << std::endl; 		      
+            
+            //if(preShift>0) massSq /= pow(10,preShift);
+            if(  massSq > 0. &&
+              massSq >= (long long)(corrPar.minMassCutValue*pow(10,preShift)) &&
+              massSq <= (long long)(corrPar.maxMassCutValue*pow(10,preShift))  ) {
+            
+              LogDebug("L1TGlobal") << "    Passed Invariant Mass Cut [" << (long long)(corrPar.minMassCutValue*pow(10,preShift))
+              << "," << (long long)(corrPar.maxMassCutValue*pow(10,preShift)) << "]" << std::endl;		      
+
+            } else {
+
+            LogDebug("L1TGlobal") << "    Failed Invariant Mass Cut [" << (long long)(corrPar.minMassCutValue*pow(10,preShift)) 
+              << "," << (long long)(corrPar.maxMassCutValue*pow(10,preShift)) << "]" << std::endl;		      
+              reqResult = false;
+            }	
+
+        } 
 
         // For Muon-Muon Correlation Check the Charge Correlation if requested
               bool chrgCorrel = true;

@@ -201,7 +201,7 @@ const bool l1t::MuCondition::evaluateCondition(const int bxEval) const {
         // check if there is a permutation that matches object-parameter requirements
         for (int i = 0; i < nObjInCond; i++) {
 
-	    passCondition = checkObjectParameter(i,  *(candVec->at(useBx,index[i]) )); //BLW Change for BXVector
+	    passCondition = checkObjectParameter(i,  *(candVec->at(useBx,index[i])), index[i] ); //BLW Change for BXVector
 	    tmpResult &= passCondition;
 	    if( passCondition ) 
 	      LogDebug("L1TGlobal") << "===> MuCondition::evaluateCondition, CONGRATS!! This muon passed the condition." << std::endl;
@@ -353,7 +353,7 @@ const l1t::Muon* l1t::MuCondition::getCandidate(const int bx, const int indexCan
  * @return The result of the comparison (false if a condition does not exist).
  */
 
-const bool l1t::MuCondition::checkObjectParameter(const int iCondition, const l1t::Muon& cand) const {
+const bool l1t::MuCondition::checkObjectParameter(const int iCondition, const l1t::Muon& cand, const unsigned int index) const {
 
     // number of objects in condition
     int nObjInCond = m_gtMuonTemplate->nrObjects();
@@ -430,6 +430,11 @@ const bool l1t::MuCondition::checkObjectParameter(const int iCondition, const l1
 	return false;
       }
 
+      // check index
+      if ( !checkIndex(objPar.indexLow, objPar.indexHigh, index) ) {
+	LogDebug("L1TGlobal") << "\t\t Muon Failed checkIndex " << std::endl;
+	return false;
+      }
 
     // check eta
     if( !checkRangeEta(cand.hwEta(), objPar.etaWindow1Lower, objPar.etaWindow1Upper, objPar.etaWindow2Lower, objPar.etaWindow2Upper, 8) ){

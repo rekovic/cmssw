@@ -1118,6 +1118,8 @@ bool l1t::TriggerMenuParser::parseMuon(tmeventsetup::esCondition condMu,
 //  Loop over the cuts for this object
         int upperThresholdInd = -1; 
 	int lowerThresholdInd = 0;
+        int upperIndexInd = -1;
+        int lowerIndexInd = 0;
         int cntEta = 0;
         unsigned int etaWindow1Lower=-1, etaWindow1Upper=-1, etaWindow2Lower=-1, etaWindow2Upper=-1;
 	int cntPhi = 0;
@@ -1135,6 +1137,11 @@ bool l1t::TriggerMenuParser::parseMuon(tmeventsetup::esCondition condMu,
 	     case esCutType::Threshold:
 	       lowerThresholdInd = cut.getMinimum().index;
 	       upperThresholdInd = cut.getMaximum().index;
+	       break;
+
+	     case esCutType::Index:
+	       lowerIndexInd = cut.getMinimum().index;
+	       upperIndexInd = cut.getMaximum().index;
 	       break;
 	       
 	     case esCutType::Eta: {
@@ -1196,6 +1203,9 @@ bool l1t::TriggerMenuParser::parseMuon(tmeventsetup::esCondition condMu,
 // Set the parameter cuts
 	objParameter[cnt].ptHighThreshold = upperThresholdInd;
 	objParameter[cnt].ptLowThreshold  = lowerThresholdInd;
+
+        objParameter[cnt].indexHigh = upperIndexInd;
+        objParameter[cnt].indexLow  = lowerIndexInd;
 
 	objParameter[cnt].etaWindow1Lower     = etaWindow1Lower;
 	objParameter[cnt].etaWindow1Upper     = etaWindow1Upper;
@@ -1343,6 +1353,8 @@ bool l1t::TriggerMenuParser::parseMuonCorr(const tmeventsetup::esObject* corrMu,
  //  Loop over the cuts for this object
     int upperThresholdInd = -1;
     int lowerThresholdInd = 0;
+    int upperIndexInd = -1;
+    int lowerIndexInd = 0;
     int cntEta = 0;
     unsigned int etaWindow1Lower=-1, etaWindow1Upper=-1, etaWindow2Lower=-1, etaWindow2Upper=-1;
     int cntPhi = 0;
@@ -1360,6 +1372,11 @@ bool l1t::TriggerMenuParser::parseMuonCorr(const tmeventsetup::esObject* corrMu,
 	 case esCutType::Threshold:
 	   lowerThresholdInd = cut.getMinimum().index;
 	   upperThresholdInd = cut.getMaximum().index;
+	   break;
+
+	 case esCutType::Index:
+	   lowerIndexInd = cut.getMinimum().index;
+	   upperIndexInd = cut.getMaximum().index;
 	   break;
 
 	 case esCutType::Eta: {
@@ -1421,6 +1438,9 @@ bool l1t::TriggerMenuParser::parseMuonCorr(const tmeventsetup::esObject* corrMu,
  // Set the parameter cuts
     objParameter[0].ptHighThreshold = upperThresholdInd;
     objParameter[0].ptLowThreshold  = lowerThresholdInd;
+
+    objParameter[0].indexHigh = upperIndexInd;
+    objParameter[0].indexLow  = lowerIndexInd;
 
     objParameter[0].etaWindow1Lower     = etaWindow1Lower;
     objParameter[0].etaWindow1Upper     = etaWindow1Upper;
@@ -1642,6 +1662,8 @@ bool l1t::TriggerMenuParser::parseCalo(tmeventsetup::esCondition condCalo,
 //  Loop over the cuts for this object
         int upperThresholdInd = -1;
 	int lowerThresholdInd = 0;
+        int upperIndexInd = -1;
+        int lowerIndexInd = 0;
         int cntEta = 0;
         unsigned int etaWindow1Lower=-1, etaWindow1Upper=-1, etaWindow2Lower=-1, etaWindow2Upper=-1;
 	int cntPhi = 0;
@@ -1659,6 +1681,10 @@ bool l1t::TriggerMenuParser::parseCalo(tmeventsetup::esCondition condCalo,
 	     case esCutType::Threshold:
 	       lowerThresholdInd = cut.getMinimum().index;
 	       upperThresholdInd = cut.getMaximum().index;
+	       break;
+	     case esCutType::Index:
+	       lowerIndexInd = cut.getMinimum().index;
+	       upperIndexInd = cut.getMaximum().index;
 	       break;
 	     case esCutType::Eta: {
 	       
@@ -1720,6 +1746,8 @@ bool l1t::TriggerMenuParser::parseCalo(tmeventsetup::esCondition condCalo,
 // Fill the object parameters
 	objParameter[cnt].etHighThreshold = upperThresholdInd;
 	objParameter[cnt].etLowThreshold  = lowerThresholdInd;
+	objParameter[cnt].indexHigh = upperIndexInd;
+	objParameter[cnt].indexLow  = lowerIndexInd;
 	objParameter[cnt].etaWindow1Lower     = etaWindow1Lower;
 	objParameter[cnt].etaWindow1Upper     = etaWindow1Upper;
 	objParameter[cnt].etaWindow2Lower = etaWindow2Lower;
@@ -2990,67 +3018,67 @@ bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
       {
         const esCut cut = cuts.at(jj);
 
-	if(cut.getCutType() == esCutType::ChargeCorrelation) { 
-	   if( cut.getData()=="ls" )      corrParameter.chargeCorrelation = 2;
-	   else if( cut.getData()=="os" ) corrParameter.chargeCorrelation = 4;
-	   else corrParameter.chargeCorrelation = 1; //ignore charge correlation
+        if(cut.getCutType() == esCutType::ChargeCorrelation) { 
+          if( cut.getData()=="ls" )      corrParameter.chargeCorrelation = 2;
+          else if( cut.getData()=="os" ) corrParameter.chargeCorrelation = 4;
+          else corrParameter.chargeCorrelation = 1; //ignore charge correlation
         } else {
 
-// 
-//  Unitl utm has method to calculate these, do the integer value calculation with precision.
-//
-          double minV = cut.getMinimum().value;
-	  double maxV = cut.getMaximum().value;
-	  
-	  //Scale down very large numbers out of xml
-	  if(maxV > 1.0e8) maxV = 1.0e8;
-	  
-	  if(cut.getCutType() == esCutType::DeltaEta) {
-	     //std::cout << "DeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-	     corrParameter.minEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
-	     corrParameter.maxEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
-	     corrParameter.precEtaCut     = cut.getMinimum().index;	     
-	     cutType = cutType | 0x1;
-	  } else if (cut.getCutType() == esCutType::DeltaPhi) {
-	     //std::cout << "DeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-	     corrParameter.minPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-	     corrParameter.maxPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-	     corrParameter.precPhiCut     = cut.getMinimum().index;
-	     cutType = cutType | 0x2;
-	  } else if (cut.getCutType() == esCutType::DeltaR) {
-	     //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-	     corrParameter.minDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-	     corrParameter.maxDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-	     corrParameter.precDRCut     = cut.getMinimum().index;
-	     cutType = cutType | 0x4; 
-	  } else if (cut.getCutType() == esCutType::Mass) {
-	     //std::cout << "Mass Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;	  
-	     corrParameter.minMassCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-	     corrParameter.maxMassCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-	     corrParameter.precMassCut     = cut.getMinimum().index;
-	     cutType = cutType | 0x8; 
-          }
-	  if(cut.getCutType() == esCutType::OverlapRemovalDeltaEta) {
-	     //std::cout << "OverlapRemovalDeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-	     corrParameter.minOverlapRemovalEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
-	     corrParameter.maxOverlapRemovalEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
-	     corrParameter.precOverlapRemovalEtaCut     = cut.getMinimum().index;	     
-	     cutType = cutType | 0x10;
-	  } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaPhi) {
-	     //std::cout << "OverlapRemovalDeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-	     corrParameter.minOverlapRemovalPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-	     corrParameter.maxOverlapRemovalPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-	     corrParameter.precOverlapRemovalPhiCut     = cut.getMinimum().index;
-	     cutType = cutType | 0x20;
-	  } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaR) {
-	     //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-	     corrParameter.minOverlapRemovalDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-	     corrParameter.maxOverlapRemovalDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-	     corrParameter.precOverlapRemovalDRCut     = cut.getMinimum().index;
-	     cutType = cutType | 0x40; 
-          }
-
-	}  
+			// 
+			//  Unitl utm has method to calculate these, do the integer value calculation with precision.
+			//
+			    double minV = cut.getMinimum().value;
+			    double maxV = cut.getMaximum().value;
+				  
+				  //Scale down very large numbers out of xml
+				  if(maxV > 1.0e8) maxV = 1.0e8;
+				  
+				  if(cut.getCutType() == esCutType::DeltaEta) {
+				     //std::cout << "DeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+				     corrParameter.minEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
+				     corrParameter.maxEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
+				     corrParameter.precEtaCut     = cut.getMinimum().index;	     
+				     cutType = cutType | 0x1;
+				  } else if (cut.getCutType() == esCutType::DeltaPhi) {
+				     //std::cout << "DeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+				     corrParameter.minPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+				     corrParameter.maxPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+				     corrParameter.precPhiCut     = cut.getMinimum().index;
+				     cutType = cutType | 0x2;
+				  } else if (cut.getCutType() == esCutType::DeltaR) {
+				     //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+				     corrParameter.minDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+				     corrParameter.maxDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+				     corrParameter.precDRCut     = cut.getMinimum().index;
+				     cutType = cutType | 0x4; 
+				  } else if (cut.getCutType() == esCutType::Mass) {
+				     //std::cout << "Mass Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;	  
+				     corrParameter.minMassCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+				     corrParameter.maxMassCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+				     corrParameter.precMassCut     = cut.getMinimum().index;
+				     cutType = cutType | 0x8; 
+			          }
+				  if(cut.getCutType() == esCutType::OverlapRemovalDeltaEta) {
+				     //std::cout << "OverlapRemovalDeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+				     corrParameter.minOverlapRemovalEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
+				     corrParameter.maxOverlapRemovalEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
+				     corrParameter.precOverlapRemovalEtaCut     = cut.getMinimum().index;	     
+				     cutType = cutType | 0x10;
+				  } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaPhi) {
+				     //std::cout << "OverlapRemovalDeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+				     corrParameter.minOverlapRemovalPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+				     corrParameter.maxOverlapRemovalPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+				     corrParameter.precOverlapRemovalPhiCut     = cut.getMinimum().index;
+				     cutType = cutType | 0x20;
+				  } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaR) {
+				     //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+				     corrParameter.minOverlapRemovalDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+				     corrParameter.maxOverlapRemovalDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+				     corrParameter.precOverlapRemovalDRCut     = cut.getMinimum().index;
+				     cutType = cutType | 0x40; 
+			    }
+			
+			  }  
 
       }
       corrParameter.corrCutType = cutType;

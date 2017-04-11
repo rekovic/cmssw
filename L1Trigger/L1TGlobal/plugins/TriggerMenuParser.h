@@ -355,7 +355,7 @@ private:
     bool parseCorrelation(tmeventsetup::esCondition corrCond, unsigned int chipNr = 0);
 
     /// parse a correlation condition with overlap removal
-    bool parseCorrelationWithOverlapRemoval(tmeventsetup::esCondition corrCond, unsigned int chipNr = 0);
+    bool parseCorrelationWithOverlapRemoval(const tmeventsetup::esCondition& corrCond, unsigned int chipNr = 0);
 
 
     /// parse all algorithms

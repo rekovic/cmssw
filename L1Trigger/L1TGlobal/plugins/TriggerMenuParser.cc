@@ -161,6 +161,12 @@ void l1t::TriggerMenuParser::setVecCorrelationTemplate(
     m_vecCorrelationTemplate = vecCorrelationTempl;
 }
 
+void l1t::TriggerMenuParser::setVecCorrelationWithOverlapRemovalTemplate(
+        const std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> >& vecCorrelationWithOverlapRemovalTempl) {
+
+    m_vecCorrelationWithOverlapRemovalTemplate = vecCorrelationWithOverlapRemovalTempl;
+}
+
 // set the vectors containing the conditions for correlation templates
 //
 void l1t::TriggerMenuParser::setCorMuonTemplate(
@@ -252,6 +258,7 @@ void l1t::TriggerMenuParser::parseCondFormats(const L1TUtmTriggerMenu* utmMenu) 
     m_vecExternalTemplate.resize(m_numberConditionChips);
 
     m_vecCorrelationTemplate.resize(m_numberConditionChips);
+    m_vecCorrelationWithOverlapRemovalTemplate.resize(m_numberConditionChips);
     m_corMuonTemplate.resize(m_numberConditionChips);
     m_corCaloTemplate.resize(m_numberConditionChips);
     m_corEnergySumTemplate.resize(m_numberConditionChips);
@@ -504,12 +511,13 @@ bool l1t::TriggerMenuParser::insertConditionIntoMap(GlobalCondition& cond, const
 
     std::string cName = cond.condName();
     LogTrace("TriggerMenuParser")
-    << "    Trying to insert condition \"" << cName << "\" in the condition map." ;
+    << "    Trying to insert condition \"" << cName << "\" in the condition map." << std::endl;
 
     // no condition name has to appear twice!
     if ((m_conditionMap[chipNr]).count(cName) != 0) {
-        LogTrace("TriggerMenuParser") << "      Condition " << cName
-            << " already exists - not inserted!" << std::endl;
+        LogTrace("TriggerMenuParser") 
+           << "      Condition " << cName
+           << " already exists - not inserted!" << std::endl;
         return false;
     }
 
@@ -2766,11 +2774,11 @@ bool l1t::TriggerMenuParser::parseCorrelation(
       for (size_t jj = 0; jj < objects.size(); jj++)
       {
         const esObject object = objects.at(jj);
-/*      std::cout << "      obj name = " << object->getName() << "\n";
-        std::cout << "      obj type = " << object->getType() << "\n";
-        std::cout << "      obj op = " << object->getComparisonOperator() << "\n";
-        std::cout << "      obj bx = " << object->getBxOffset() << "\n";
-*/
+      //std::cout << "      obj name = " << object.getName() << "\n";
+      //std::cout << "      obj type = " << object.getType() << "\n";
+      //std::cout << "      obj op = " << object.getComparisonOperator() << "\n";
+      //std::cout << "      obj bx = " << object.getBxOffset() << "\n";
+
 
 // check the leg type
         if(object.getType() == esObjectType::Muon) {
@@ -2955,7 +2963,7 @@ bool l1t::TriggerMenuParser::parseCorrelation(
  */
 
 bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
-        tmeventsetup::esCondition corrCond,
+        const tmeventsetup::esCondition& corrCond,
         unsigned int chipNr) {
 
     using namespace tmeventsetup;
@@ -2966,7 +2974,7 @@ bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
     std::string name = l1t2string( corrCond.getName() );
 
     LogDebug("TriggerMenuParser") << " ****************************************** " << std::endl
-     << "     (in parseCorrelation) " << std::endl
+     << "     (in parseCorrelationWithOverlapRemoval) " << std::endl
      << " condition = " << condition << std::endl
      << " particle  = " << particle << std::endl
      << " type      = " << type << std::endl
@@ -3024,61 +3032,61 @@ bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
           else corrParameter.chargeCorrelation = 1; //ignore charge correlation
         } else {
 
-			// 
-			//  Unitl utm has method to calculate these, do the integer value calculation with precision.
-			//
-			    double minV = cut.getMinimum().value;
-			    double maxV = cut.getMaximum().value;
-				  
-				  //Scale down very large numbers out of xml
-				  if(maxV > 1.0e8) maxV = 1.0e8;
-				  
-				  if(cut.getCutType() == esCutType::DeltaEta) {
-				     //std::cout << "DeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-				     corrParameter.minEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
-				     corrParameter.maxEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
-				     corrParameter.precEtaCut     = cut.getMinimum().index;	     
-				     cutType = cutType | 0x1;
-				  } else if (cut.getCutType() == esCutType::DeltaPhi) {
-				     //std::cout << "DeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-				     corrParameter.minPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-				     corrParameter.maxPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-				     corrParameter.precPhiCut     = cut.getMinimum().index;
-				     cutType = cutType | 0x2;
-				  } else if (cut.getCutType() == esCutType::DeltaR) {
-				     //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-				     corrParameter.minDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-				     corrParameter.maxDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-				     corrParameter.precDRCut     = cut.getMinimum().index;
-				     cutType = cutType | 0x4; 
-				  } else if (cut.getCutType() == esCutType::Mass) {
-				     //std::cout << "Mass Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;	  
-				     corrParameter.minMassCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-				     corrParameter.maxMassCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-				     corrParameter.precMassCut     = cut.getMinimum().index;
-				     cutType = cutType | 0x8; 
-			          }
-				  if(cut.getCutType() == esCutType::OverlapRemovalDeltaEta) {
-				     //std::cout << "OverlapRemovalDeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-				     corrParameter.minOverlapRemovalEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
-				     corrParameter.maxOverlapRemovalEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
-				     corrParameter.precOverlapRemovalEtaCut     = cut.getMinimum().index;	     
-				     cutType = cutType | 0x10;
-				  } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaPhi) {
-				     //std::cout << "OverlapRemovalDeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-				     corrParameter.minOverlapRemovalPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-				     corrParameter.maxOverlapRemovalPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-				     corrParameter.precOverlapRemovalPhiCut     = cut.getMinimum().index;
-				     cutType = cutType | 0x20;
-				  } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaR) {
-				     //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
-				     corrParameter.minOverlapRemovalDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
-				     corrParameter.maxOverlapRemovalDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
-				     corrParameter.precOverlapRemovalDRCut     = cut.getMinimum().index;
-				     cutType = cutType | 0x40; 
-			    }
-			
-			  }  
+	  // 
+	  //  Unitl utm has method to calculate these, do the integer value calculation with precision.
+	  //
+	  double minV = cut.getMinimum().value;
+	  double maxV = cut.getMaximum().value;
+	       
+	  //Scale down very large numbers out of xml
+	  if(maxV > 1.0e8) maxV = 1.0e8;
+	  
+	  if(cut.getCutType() == esCutType::DeltaEta) {
+	     //std::cout << "DeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+	     corrParameter.minEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
+	     corrParameter.maxEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
+	     corrParameter.precEtaCut     = cut.getMinimum().index;	     
+	     cutType = cutType | 0x1;
+	  } else if (cut.getCutType() == esCutType::DeltaPhi) {
+	     //std::cout << "DeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+	     corrParameter.minPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+	     corrParameter.maxPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+	     corrParameter.precPhiCut     = cut.getMinimum().index;
+	     cutType = cutType | 0x2;
+	  } else if (cut.getCutType() == esCutType::DeltaR) {
+	     //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+	     corrParameter.minDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+	     corrParameter.maxDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+	     corrParameter.precDRCut     = cut.getMinimum().index;
+	     cutType = cutType | 0x4; 
+	  } else if (cut.getCutType() == esCutType::Mass) {
+	     //std::cout << "Mass Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;	  
+	     corrParameter.minMassCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+	     corrParameter.maxMassCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+	     corrParameter.precMassCut     = cut.getMinimum().index;
+	     cutType = cutType | 0x8; 
+	   }
+	  if(cut.getCutType() == esCutType::OverlapRemovalDeltaEta) {
+	     //std::cout << "OverlapRemovalDeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+	     corrParameter.minOverlapRemovalEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
+	     corrParameter.maxOverlapRemovalEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
+	     corrParameter.precOverlapRemovalEtaCut     = cut.getMinimum().index;	     
+	     cutType = cutType | 0x10;
+	  } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaPhi) {
+	     //std::cout << "OverlapRemovalDeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+	     corrParameter.minOverlapRemovalPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+	     corrParameter.maxOverlapRemovalPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+	     corrParameter.precOverlapRemovalPhiCut     = cut.getMinimum().index;
+	     cutType = cutType | 0x20;
+	  } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaR) {
+	     //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+	     corrParameter.minOverlapRemovalDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+	     corrParameter.maxOverlapRemovalDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+	     corrParameter.precOverlapRemovalDRCut     = cut.getMinimum().index;
+	     cutType = cutType | 0x40; 
+	  }
+	 
+	}  
 
       }
       corrParameter.corrCutType = cutType;
@@ -3094,12 +3102,13 @@ bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
 // loop over legs      
       for (size_t jj = 0; jj < objects.size(); jj++)
       {
-        const esObject object = objects.at(jj);
-/*      std::cout << "      obj name = " << object->getName() << "\n";
-        std::cout << "      obj type = " << object->getType() << "\n";
-        std::cout << "      obj op = " << object->getComparisonOperator() << "\n";
-        std::cout << "      obj bx = " << object->getBxOffset() << "\n";
-*/
+        const esObject& object = objects.at(jj);
+      //std::cout << "      obj name = " << object.getName() << "\n";
+        //std::cout << "      obj type = " << object.getType() << "\n";
+        //std::cout << "      obj op = " << object.getComparisonOperator() << "\n";
+        //std::cout << "      obj bx = " << object.getBxOffset() << "\n";
+        //std::cout << "type = done" << std::endl;
+
 
 // check the leg type
         if(object.getType() == esObjectType::Muon) {

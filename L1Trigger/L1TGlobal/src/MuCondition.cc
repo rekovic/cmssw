@@ -399,6 +399,8 @@ const bool l1t::MuCondition::checkObjectParameter(const int iCondition, const l1
       << "\n MuonTemplate::ObjectParameter : " << std::hex
       << "\n\t ptHighThreshold = 0x " << objPar.ptHighThreshold 
       << "\n\t ptLowThreshold  = 0x " << objPar.ptLowThreshold
+      << "\n\t indexHigh       = 0x " << objPar.indexHigh 
+      << "\n\t indexLow        = 0x " << objPar.indexLow
       << "\n\t requestIso      = 0x " << objPar.requestIso
       << "\n\t enableIso       = 0x " << objPar.enableIso
       << "\n\t etaRange        = 0x " << objPar.etaRange

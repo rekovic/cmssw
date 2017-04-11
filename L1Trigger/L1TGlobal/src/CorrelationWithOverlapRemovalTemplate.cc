@@ -36,7 +36,7 @@ CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalTemplate()
 {
 
     m_condCategory = l1t::CondCorrelationWithOverlapRemoval;
-    m_condType = l1t::Type2cor;
+    m_condType = l1t::Type2corWithOverlapRemoval;
     m_condChipNr = -1;
 
     // there are in fact three objects
@@ -61,7 +61,7 @@ CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalTemplate(con
 {
 
     m_condCategory = l1t::CondCorrelationWithOverlapRemoval;
-    m_condType = l1t::Type2cor;
+    m_condType = l1t::Type2corWithOverlapRemoval;
     m_condChipNr = -1;
 
     // there are in fact two objects

@@ -1938,6 +1938,8 @@ bool l1t::TriggerMenuParser::parseCaloCorr(const tmeventsetup::esObject* corrCal
 //  Loop over the cuts for this object
      int upperThresholdInd = -1;
      int lowerThresholdInd = 0;
+     int upperIndexInd = -1;
+     int lowerIndexInd = 0;
      int cntEta = 0;
      unsigned int etaWindow1Lower=-1, etaWindow1Upper=-1, etaWindow2Lower=-1, etaWindow2Upper=-1;
      int cntPhi = 0;
@@ -1955,6 +1957,10 @@ bool l1t::TriggerMenuParser::parseCaloCorr(const tmeventsetup::esObject* corrCal
 	  case esCutType::Threshold:
 	    lowerThresholdInd = cut.getMinimum().index;
 	    upperThresholdInd = cut.getMaximum().index;
+	    break;
+	  case esCutType::Index:
+	    lowerIndexInd = cut.getMinimum().index;
+	    upperIndexInd = cut.getMaximum().index;
 	    break;
 	  case esCutType::Eta: {
 
@@ -2016,6 +2022,8 @@ bool l1t::TriggerMenuParser::parseCaloCorr(const tmeventsetup::esObject* corrCal
 // Fill the object parameters
      objParameter[0].etLowThreshold  = lowerThresholdInd;
      objParameter[0].etHighThreshold = upperThresholdInd;
+     objParameter[0].indexHigh = upperIndexInd;
+     objParameter[0].indexLow  = lowerIndexInd;
      objParameter[0].etaWindow1Lower = etaWindow1Lower;
      objParameter[0].etaWindow1Upper = etaWindow1Upper;
      objParameter[0].etaWindow2Lower = etaWindow2Lower;

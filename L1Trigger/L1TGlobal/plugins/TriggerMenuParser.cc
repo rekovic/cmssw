@@ -1148,8 +1148,8 @@ bool l1t::TriggerMenuParser::parseMuon(tmeventsetup::esCondition condMu,
 	       break;
 
 	     case esCutType::Index:
-	       lowerIndexInd = cut.getMinimum().index;
-	       upperIndexInd = cut.getMaximum().index;
+	       lowerIndexInd = int(cut.getMinimum().value);
+	       upperIndexInd = int(cut.getMaximum().value);
 	       break;
 	       
 	     case esCutType::Eta: {
@@ -1383,8 +1383,8 @@ bool l1t::TriggerMenuParser::parseMuonCorr(const tmeventsetup::esObject* corrMu,
 	   break;
 
 	 case esCutType::Index:
-	   lowerIndexInd = cut.getMinimum().index;
-	   upperIndexInd = cut.getMaximum().index;
+	   lowerIndexInd = int(cut.getMinimum().value);
+	   upperIndexInd = int(cut.getMaximum().value);
 	   break;
 
 	 case esCutType::Eta: {
@@ -1691,8 +1691,8 @@ bool l1t::TriggerMenuParser::parseCalo(tmeventsetup::esCondition condCalo,
 	       upperThresholdInd = cut.getMaximum().index;
 	       break;
 	     case esCutType::Index:
-	       lowerIndexInd = cut.getMinimum().index;
-	       upperIndexInd = cut.getMaximum().index;
+	       lowerIndexInd = int(cut.getMinimum().value);
+	       upperIndexInd = int(cut.getMaximum().value);
 	       break;
 	     case esCutType::Eta: {
 	       
@@ -1959,8 +1959,8 @@ bool l1t::TriggerMenuParser::parseCaloCorr(const tmeventsetup::esObject* corrCal
 	    upperThresholdInd = cut.getMaximum().index;
 	    break;
 	  case esCutType::Index:
-	    lowerIndexInd = cut.getMinimum().index;
-	    upperIndexInd = cut.getMaximum().index;
+	    lowerIndexInd = int(cut.getMinimum().value);
+	    upperIndexInd = int(cut.getMaximum().value);
 	    break;
 	  case esCutType::Eta: {
 

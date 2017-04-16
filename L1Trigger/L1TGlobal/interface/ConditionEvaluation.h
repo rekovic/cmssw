@@ -213,7 +213,7 @@ template<class Type1> const bool ConditionEvaluation::checkIndex(const Type1& in
   if( indexLo > indexHi ) {
     return false;
   }
-  if (index >= indexLo && index < indexHi) {
+  if (index >= indexLo && index <= indexHi) {
     return true;
   }
 

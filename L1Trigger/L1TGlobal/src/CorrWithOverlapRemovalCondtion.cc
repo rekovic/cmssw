@@ -425,13 +425,15 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
             break;
     }
 
-    // return if second sub-condition is false
+    // if third sub-condition is false, effectively there will no overlap removal
     if (!reqObjResult) {
-        return false;
+        LogDebug("L1TGlobal") << "\n"
+                << "    First two sub-conditions true and third sub-condtion false for object requirements."
+                << "    Evaluate correlation requirements. Effectively no overlap removal.\n" << std::endl;
     } else {
         LogDebug("L1TGlobal") << "\n"
-                << "    Both sub-conditions true for object requirements."
-                << "    Evaluate correlation requirements.\n" << std::endl;
+                << "    All three sub-conditions true for object requirements."
+                << "    Evaluate correlation requirements and overlap removal.\n" << std::endl;
 
     }
 
@@ -820,13 +822,15 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
           }
             break;
         } //end switch on first leg type
+
+        LogDebug("L1TGlobal") << "lutObj0 = " << lutObj0 << std::endl;
         
         unsigned int overlapRemovalMatchLeg1 = 0x0;
 
         // ///////////////////////////////////////////////////////////////////////////////////////////
         // loop over overlap-removal leg combination which produced individually "true" as Type1s 
         // ///////////////////////////////////////////////////////////////////////////////////////////
-        for (std::vector<SingleCombInCond>::const_iterator it2Comb = cond2Comb.begin(); it2Comb != cond2Comb.end(); it2Comb++) {
+        for (std::vector<SingleCombInCond>::const_iterator it2Comb = cond2Comb.begin(); it2Comb != cond2Comb.end() && overlapRemovalMatchLeg1 != 0x1; it2Comb++) {
         
           // Type1s: there is 1 object only, no need for a loop, index 0 should be OK in (*it2Comb)[0]
           // ... but add protection to not crash
@@ -1037,6 +1041,8 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
             }
               break;
           } //end switch on overlap-removal leg type
+
+          LogDebug("L1TGlobal") << "lutObj2 = " << lutObj2 << std::endl;
   			
           // /////////////////////////////////////////////////////////////////////////////////////////
           //
@@ -1069,7 +1075,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
           LogDebug("L1TGlobal") << "Obj0 phiFW = " << phiORIndex0 << " Obj2 phiFW = " << phiIndex2 << "\n"
           << "    DeltaPhiFW = " << deltaPhiFW << "\n"
           << "    LUT Name = " << lutName << " Prec = " << precDeltaPhiLUT << "  DeltaPhiLUT = " << deltaPhiLUT << "\n"
-          << "Obj0 etaFW = " << etaIndex0 << " Obj1 etaFW = " << etaIndex1 << "\n"
+          << "Obj0 etaFW = " << etaIndex0 << " Obj2 etaFW = " << etaIndex2 << "\n"
           << "    DeltaEtaFW = " << deltaEtaFW << "\n"
           << "    LUT Name = " << lutName << " Prec = " << precDeltaEtaLUT << "  DeltaEtaLUT = " << deltaEtaLUT << std::endl;
           
@@ -1077,7 +1083,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
           if(corrPar.corrCutType & 0x10) {
                 
                 unsigned int preShift = precDeltaEtaLUT - corrPar.precOverlapRemovalEtaCut;
-                LogDebug("L1TGlobal")    << "    Testing Overlap Delta Eta Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                LogDebug("L1TGlobal")    << "    Testing Leg1 Overlap Removal Delta Eta Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
                 << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalEtaCut <<"\n"
                 << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
                 << "    Precision Shift = " << preShift << "\n"
@@ -1089,14 +1095,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                     deltaEtaLUT <= (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) ) {
           
                   overlapRemovalMatchLeg1 |= 0x1;
-                  LogDebug("L1TGlobal") << "    Satified Overlap Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal") << "    Satified Leg1 Overlap Removal Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
                   // next leg3 object
                   continue;
                      		  
                 } else {
     
-                  LogDebug("L1TGlobal")  << "    Failed Overlap Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal")  << "    Failed Leg1 Overlap Removal Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
                 }	
     
@@ -1106,7 +1112,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
               if(corrPar.corrCutType & 0x20) {
     
                 unsigned int preShift = precDeltaPhiLUT - corrPar.precOverlapRemovalPhiCut;	  
-                LogDebug("L1TGlobal")  << "    Testing Overlap Delta Phi Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                LogDebug("L1TGlobal")  << "    Testing Leg1 Overlap Removal Delta Phi Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
                 << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalPhiCut <<"\n"
                 << "    deltaPhiLUT = " << deltaPhiLUT  << "\n"
                 << "    Precision Shift = " << preShift << "\n"
@@ -1118,14 +1124,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                   deltaPhiLUT <= (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) ) {
 
                   overlapRemovalMatchLeg1 |= 0x1;
-                  LogDebug("L1TGlobal")  << "    Satisfied Overlap Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal")  << "    Satisfied Leg1 Overlap Removal Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
                   // next leg3 object
                   continue;
 
                 } else {
 
-                  LogDebug("L1TGlobal") << "    Failed Overlap Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal") << "    Failed Leg1 Overlap Removal Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
                 }	
               }
@@ -1138,7 +1144,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                 double deltaRSqPhy = deltaPhiPhy*deltaPhiPhy + deltaEtaPhy*deltaEtaPhy;
                 long long deltaRSq = deltaEtaLUT*deltaEtaLUT + deltaPhiLUT*deltaPhiLUT;
 
-                LogDebug("L1TGlobal") << "    Testing Overlap Delta R Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                LogDebug("L1TGlobal") << "    Testing Leg1 Overlap Removal Delta R Cut (" << lutObj0 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
                 << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalDRCut <<"\n"
                 << "    deltaPhiLUT = " << deltaPhiLUT << "\n"
                 << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
@@ -1152,14 +1158,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                   deltaRSq <= (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) ) {
 
                   overlapRemovalMatchLeg1 |= 0x1;
-                  LogDebug("L1TGlobal") << "    Passed Overlap Delta R Cut [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal") << "    Satified Leg1 Overlap Removal Delta R Cut [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
                   // next leg3 object
                   continue;
 
                 } else {
 
-                  LogDebug("L1TGlobal") << "    Failed Overlap Delta R Cut [" << (int)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal") << "    Failed Leg1 Overlap Removal Delta R Cut [" << (int)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
 
                 }	
@@ -1170,7 +1176,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
 
             // skip object leg1 if matched with overlap removal object
             // ///////////////////////////////////////////////////////
-            if (overlapRemovalMatchLeg1 == 0x1) continue; 
+            if (overlapRemovalMatchLeg1 == 0x1) {
+              LogDebug("L1TGlobal") << "   Remove Object of Leg1: Satisfied Overlap Removal Cuts " << std::endl;
+              continue; 
+            }
+            else {
+              LogDebug("L1TGlobal") << "   Keep Object of Leg1: Failed Overlap Removal Cuts " << std::endl;
+            }
+
 
             // ///////////////////////////////////////////////////////////////////////////////////////////
             // Now loop over the second leg to get its information
@@ -1484,7 +1497,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
             // ///////////////////////////////////////////////////////////////////////////////////////////
             // loop over overlap-removal leg combination which produced individually "true" as Type1s 
             // ///////////////////////////////////////////////////////////////////////////////////////////
-            for (std::vector<SingleCombInCond>::const_iterator it2Comb = cond2Comb.begin(); it2Comb != cond2Comb.end(); it2Comb++) {
+            for (std::vector<SingleCombInCond>::const_iterator it2Comb = cond2Comb.begin(); it2Comb != cond2Comb.end() && overlapRemovalMatchLeg2 != 0x1; it2Comb++) {
 
               // Type1s: there is 1 object only, no need for a loop, index 0 should be OK in (*it2Comb)[0]
               // ... but add protection to not crash
@@ -1727,7 +1740,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
               if(corrPar.corrCutType & 0x10) {
               
                 unsigned int preShift = precDeltaEtaLUT - corrPar.precOverlapRemovalEtaCut;
-                LogDebug("L1TGlobal")    << "    Testing Delta Eta Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                LogDebug("L1TGlobal")    << "    Testing Leg2 Overlap Removal Delta Eta Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
                 << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalEtaCut <<"\n"
                 << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
                 << "    Precision Shift = " << preShift << "\n"
@@ -1739,14 +1752,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                   deltaEtaLUT <= (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) ) {
                 
                   overlapRemovalMatchLeg2 |= 0x1;
-                  LogDebug("L1TGlobal") << "    Passed Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal") << "    Satisfied Leg2 Overlap Removal Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
                   // next leg3 object
                   continue;
                 
                 } else {
                 
-                  LogDebug("L1TGlobal")  << "    Failed Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal")  << "    Failed Leg2 Overlap Removal Delta Eta Cut [" << (long long)(corrPar.minOverlapRemovalEtaCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalEtaCutValue*pow(10,preShift)) << "]" << std::endl;		      
                 }	
               }
@@ -1767,14 +1780,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                   deltaPhiLUT <= (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) ) {
                 
                   overlapRemovalMatchLeg2 |= 0x1;
-                  LogDebug("L1TGlobal")  << "    Passed Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal")  << "    Satisfied Leg2 Overlap Removal Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
                   // next leg3 object
                   continue;
                     
                 } else {
                 
-                  LogDebug("L1TGlobal") << "    Failed Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal") << "    Failed Leg2 Overlap Removal Delta Phi Cut [" << (long long)(corrPar.minOverlapRemovalPhiCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalPhiCutValue*pow(10,preShift)) << "]" << std::endl;		      
                 }	
               }
@@ -1788,7 +1801,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                 double deltaRSqPhy = deltaPhiPhy*deltaPhiPhy + deltaEtaPhy*deltaEtaPhy;
                 long long deltaRSq = deltaEtaLUT*deltaEtaLUT + deltaPhiLUT*deltaPhiLUT;
                   		  
-                LogDebug("L1TGlobal") << "    Testing Delta R Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                LogDebug("L1TGlobal") << "    Testing Leg2 Overlap Removal Delta R Cut (" << lutObj1 << "," << lutObj2 << ") [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
                 << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "] with precision = " << corrPar.precOverlapRemovalDRCut <<"\n"
                 << "    deltaPhiLUT = " << deltaPhiLUT << "\n"
                 << "    deltaEtaLUT = " << deltaEtaLUT << "\n"
@@ -1802,14 +1815,14 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
                   deltaRSq <= (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) ) {
 
                   overlapRemovalMatchLeg2 |= 0x1;
-                  LogDebug("L1TGlobal") << "    Passed Delta R Cut [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal") << "    Satisfied Leg2 Overlap Removal Delta R Cut [" << (long long)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
                   // next leg3 object
                   continue;
                 
                 } else {
 
-                  LogDebug("L1TGlobal") << "    Failed Delta R Cut [" << (int)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
+                  LogDebug("L1TGlobal") << "    Failed Leg2 Overlap Removal Delta R Cut [" << (int)(corrPar.minOverlapRemovalDRCutValue*pow(10,preShift)) 
                   << "," << (long long)(corrPar.maxOverlapRemovalDRCutValue*pow(10,preShift)) << "]" << std::endl;		      
                 }	
               }  	 
@@ -1818,7 +1831,13 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
 
             // skip object leg2 if matched with overlap removal object
             // ///////////////////////////////////////////////////////
-            if (overlapRemovalMatchLeg2 == 0x1) continue; 
+            if (overlapRemovalMatchLeg2 == 0x1) {
+              LogDebug("L1TGlobal") << "   Remove Object of Leg2: Satisfied Overlap Removal Cuts" << std::endl;
+              continue; 
+            }
+            else {
+              LogDebug("L1TGlobal") << "   Keep Object of Leg2: Failed Overlap Removal Cuts " << std::endl;
+            }
 
             
             // ///////////////////////////////////////////////////////

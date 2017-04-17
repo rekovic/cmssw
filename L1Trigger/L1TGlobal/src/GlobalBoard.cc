@@ -710,7 +710,7 @@ void l1t::GlobalBoard::runGTL(
 		    const GtConditionCategory cond2Categ = corrTemplate->cond2Category();
 		    const int cond0Ind = corrTemplate->cond0Index();
 		    const int cond1Ind = corrTemplate->cond1Index();
-		    const int cond2Ind = corrTemplate->cond1Index();
+		    const int cond2Ind = corrTemplate->cond2Index();
 
 		    const GlobalCondition* cond0Condition = 0;
 		    const GlobalCondition* cond1Condition = 0;

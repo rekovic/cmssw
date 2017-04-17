@@ -142,9 +142,9 @@ public:
 
     /// get / set correlation parameters
 
-    inline const CorrelationWithOverlapRemovalParameter* correlationParameter() const
+    inline const CorrelationWithOverlapRemovalParameter* correlationWithOverlapRemovalParameter() const
     {
-        return &m_correlationParameter;
+        return &m_correlationWithOverlapRemovalParameter;
     }
 
     void setCorrelationWithOverlapRemovalParameter(const CorrelationWithOverlapRemovalParameter& corrParameter);
@@ -171,7 +171,7 @@ private:
     int m_cond0Index;
     int m_cond1Index;
     int m_cond2Index;
-    CorrelationWithOverlapRemovalParameter m_correlationParameter;
+    CorrelationWithOverlapRemovalParameter m_correlationWithOverlapRemovalParameter;
 
 };
 

@@ -438,7 +438,7 @@ const bool l1t::CorrWithOverlapRemovalCondition::evaluateCondition(const int bxE
     }
 
     // since we have two good legs and overlap-removal let, get the correlation parameters
-    CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalParameter corrPar = *(m_gtCorrelationWithOverlapRemovalTemplate->correlationParameter());
+    CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalParameter corrPar = *(m_gtCorrelationWithOverlapRemovalTemplate->correlationWithOverlapRemovalParameter());
 
     // vector to store the indices of the calorimeter objects
     // from the combination evaluated in the condition

@@ -95,11 +95,6 @@ const int GlobalCondition::nrObjects() const
             }
 
             break;
-        case l1t::Type2corWithOverlapRemoval: {
-                return 3;
-            }
-
-            break;
         case l1t::Type3s: {
                 return 3;
             }
@@ -121,6 +116,31 @@ const int GlobalCondition::nrObjects() const
 	case l1t::TypeMinBiasHFP1:
 	case l1t::TypeMinBiasHFM1: {
                 return 1;
+            }
+
+            break;
+        case l1t::Type2corWithOverlapRemoval: {
+                return 3;
+            }
+
+            break;
+        case l1t::Type1sWithOverlapRemoval: {
+                return 2;
+            }
+
+            break;
+        case l1t::Type2sWithOverlapRemoval: {
+                return 3;
+            }
+
+            break;
+        case l1t::Type3sWithOverlapRemoval: {
+                return 4;
+            }
+
+            break;
+        case l1t::Type4sWithOverlapRemoval: {
+                return 5;
             }
 
             break;
@@ -191,6 +211,11 @@ void GlobalCondition::print(std::ostream& myCout) const
             }
 
             break;	    
+        case l1t::CondCaloWithOverlapRemoval: {
+                myCout << "  Condition category: " << "CondCaloWithOverlapRemoval"  << std::endl;
+            }
+
+            break;	    
         case l1t::CondCorrelationWithOverlapRemoval: {
                 myCout << "  Condition category: " << "CondCorrelationWithOverlapRemoval"  << std::endl;
             }
@@ -226,11 +251,6 @@ void GlobalCondition::print(std::ostream& myCout) const
             break;
         case l1t::Type2s: {
                 myCout << "  Condition type:     " << "l1t::Type2s"  << std::endl;
-            }
-
-            break;
-        case l1t::Type2corWithOverlapRemoval: {
-                myCout << "  Condition type:     " << "l1t::Type2corWithOverlapRemoval"  << std::endl;
             }
 
             break;
@@ -311,6 +331,31 @@ void GlobalCondition::print(std::ostream& myCout) const
             break;
         case l1t::TypeExternal: {
                 myCout << "  Condition type:     " << "TypeExternal"  << std::endl;
+            }
+
+            break;
+        case l1t::Type2corWithOverlapRemoval: {
+                myCout << "  Condition type:     " << "l1t::Type2corWithOverlapRemoval"  << std::endl;
+            }
+
+            break;
+        case l1t::Type1sWithOverlapRemoval: {
+                myCout << "  Condition type:     " << "l1t::Type1sWithOverlapRemoval"  << std::endl;
+            }
+
+            break;
+        case l1t::Type2sWithOverlapRemoval: {
+                myCout << "  Condition type:     " << "l1t::Type2sWithOverlapRemoval"  << std::endl;
+            }
+
+            break;
+        case l1t::Type3sWithOverlapRemoval: {
+                myCout << "  Condition type:     " << "l1t::Type3sWithOverlapRemoval"  << std::endl;
+            }
+
+            break;
+        case l1t::Type4sWithOverlapRemoval: {
+                myCout << "  Condition type:     " << "l1t::Type4sWithOverlapRemoval"  << std::endl;
             }
 
             break;

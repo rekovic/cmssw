@@ -49,6 +49,11 @@ std::string l1GtBoardTypeEnumToString(const L1GtBoardType&);
 /// Type4s : four particles, same type
 /// TypeETM, TypeETT, TypeHTT, TypeHTM  : ETM, ETT, HTT, HTM
 /// TypeExternal: external conditions (logical result only; definition in L1 GT external systems)
+/// Type1sWithOverlapRemoval: two particles - as Type1s plus one particle for overlap removal
+/// Type2sWithOverlapRemoval: three particles - as Type2s plus one particle for overlap removal
+/// Type3sWithOverlapRemoval: four particles - as Type3s plus one particle for overlap removal
+/// Type4sWithOverlapRemoval: five particles - as Type4s plus one particle for overlap removal
+/// Type2corWithOverlapRemoval: three partices - as Type2cor plus one particle for overlap removal
 enum GtConditionType {
     TypeNull,
     Type1s,
@@ -69,6 +74,10 @@ enum GtConditionType {
     TypeMinBiasHFM1,
     TypeETTem,
     TypeExternal,
+    Type1sWithOverlapRemoval,
+    Type2sWithOverlapRemoval,
+    Type3sWithOverlapRemoval,
+    Type4sWithOverlapRemoval,
     Type2corWithOverlapRemoval
 
 };
@@ -89,6 +98,8 @@ enum GtConditionCategory {
     CondEnergySum,
     CondCorrelation,
     CondExternal,
+    CondMuonWithOverlapRemoval,
+    CondCaloWithOverlapRemoval,
     CondCorrelationWithOverlapRemoval
 };
 

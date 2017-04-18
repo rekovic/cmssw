@@ -15,6 +15,7 @@
  * \author  Vladimir Rekovic
  *                - indexing
  *                - correlations with overlap object removal 
+ *                - multi object same type with overlap object removal 
  *
  * $Date$
  * $Revision$
@@ -32,6 +33,7 @@
 #include "L1Trigger/L1TGlobal/interface/EnergySumTemplate.h"
 #include "L1Trigger/L1TGlobal/interface/CorrelationTemplate.h"
 #include "L1Trigger/L1TGlobal/interface/CorrelationWithOverlapRemovalTemplate.h"
+#include "L1Trigger/L1TGlobal/interface/CaloWithOverlapRemovalTemplate.h"
 #include "L1Trigger/L1TGlobal/interface/ExternalTemplate.h"
 
 #include "L1Trigger/L1TGlobal/interface/GlobalScales.h"
@@ -181,6 +183,7 @@ public:
     void setVecCorrelationTemplate(
             const std::vector<std::vector<CorrelationTemplate> >&);
 
+    //
     inline const std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> >& vecCorrelationWithOverlapRemovalTemplate() const {
 
         return m_vecCorrelationWithOverlapRemovalTemplate;
@@ -188,6 +191,15 @@ public:
 
     void setVecCorrelationWithOverlapRemovalTemplate(
             const std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> >&);
+
+    //
+    inline const std::vector<std::vector<CaloWithOverlapRemovalTemplate> >& vecCaloWithOverlapRemovalTemplate() const {
+
+        return m_vecCaloWithOverlapRemovalTemplate;
+    }
+
+    void setVecCaloWithOverlapRemovalTemplate(
+            const std::vector<std::vector<CaloWithOverlapRemovalTemplate> >&);
 
     // get / set the vectors containing the conditions for correlation templates
     //
@@ -334,6 +346,9 @@ private:
     bool parseCalo( tmeventsetup::esCondition condCalo,
             unsigned int chipNr = 0, const bool corrFlag = false);
 
+    bool parseCaloWithOverlapRemoval( tmeventsetup::esCondition condCalo,
+            unsigned int chipNr = 0);
+
     bool parseCaloCorr(const tmeventsetup::esObject* corrCalo,
             unsigned int chipNr = 0);
 
@@ -451,6 +466,7 @@ private:
 
     std::vector<std::vector<CorrelationTemplate> > m_vecCorrelationTemplate;
     std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> > m_vecCorrelationWithOverlapRemovalTemplate;
+    std::vector<std::vector<CaloWithOverlapRemovalTemplate> > m_vecCaloWithOverlapRemovalTemplate;
     std::vector<std::vector<MuonTemplate> > m_corMuonTemplate;
     std::vector<std::vector<CaloTemplate> > m_corCaloTemplate;
     std::vector<std::vector<EnergySumTemplate> > m_corEnergySumTemplate;

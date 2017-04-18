@@ -168,6 +168,12 @@ void l1t::TriggerMenuParser::setVecCorrelationWithOverlapRemovalTemplate(
     m_vecCorrelationWithOverlapRemovalTemplate = vecCorrelationWithOverlapRemovalTempl;
 }
 
+void l1t::TriggerMenuParser::setVecCaloWithOverlapRemovalTemplate(
+        const std::vector<std::vector<CaloWithOverlapRemovalTemplate> >& vecCorrelationWithOverlapRemovalTempl) {
+
+    m_vecCaloWithOverlapRemovalTemplate = vecCorrelationWithOverlapRemovalTempl;
+}
+
 // set the vectors containing the conditions for correlation templates
 //
 void l1t::TriggerMenuParser::setCorMuonTemplate(
@@ -260,6 +266,7 @@ void l1t::TriggerMenuParser::parseCondFormats(const L1TUtmTriggerMenu* utmMenu) 
 
     m_vecCorrelationTemplate.resize(m_numberConditionChips);
     m_vecCorrelationWithOverlapRemovalTemplate.resize(m_numberConditionChips);
+    m_vecCaloWithOverlapRemovalTemplate.resize(m_numberConditionChips);
     m_corMuonTemplate.resize(m_numberConditionChips);
     m_corCaloTemplate.resize(m_numberConditionChips);
     m_corEnergySumTemplate.resize(m_numberConditionChips);
@@ -397,21 +404,7 @@ void l1t::TriggerMenuParser::parseCondFormats(const L1TUtmTriggerMenu* utmMenu) 
 		  condition.getType() == esConditionType::TripleJetWithOverlapRemoval  ||
 		  condition.getType() == esConditionType::QuadJetWithOverlapRemoval) {
 
-             edm::LogError("TriggerMenuParser") << std::endl
-                << "SingleEgammaWithOverlapRemoval" << std::endl
-	        << "DoubleEgammaWithOverlapRemoval" << std::endl
-	        << "TripleEgammaWithOverlapRemoval" << std::endl
-	        << "QuadEgammaWithOverlapRemoval" << std::endl
-	        << "SingleTauWithOverlapRemoval" << std::endl
-	        << "DoubleTauWithOverlapRemoval" << std::endl
-	        << "TripleTauWithOverlapRemoval" << std::endl
-	        << "QuadTauWithOverlapRemoval" << std::endl
-	        << "SingleJetWithOverlapRemoval" << std::endl
-	        << "DoubleJetWithOverlapRemoval" << std::endl
-	        << "TripleJetWithOverlapRemoval" << std::endl
-	        << "QuadJetWithOverlapRemoval" << std::endl
-                << "The above conditions types WithOverlapRemoval are not implemented yet in the parser. Please remove alogrithms that use this type of condtion from L1T Menu!" << std::endl;
-             //parseCalo(condition,chipNr,false); 
+             parseCaloWithOverlapRemoval(condition,chipNr);
 
           } 
           //parse CorrelationWithOverlapRemoval
@@ -1849,6 +1842,393 @@ bool l1t::TriggerMenuParser::parseCalo(tmeventsetup::esCondition condCalo,
 
 
 /**
+ * parseCaloWithOverlapRemoval Parse a calo condition and insert an entry to the conditions map
+ *
+ * @param node The corresponding node.
+ * @param name The name of the condition.
+ * @param chipNr The number of the chip this condition is located.
+ *
+ * @return "true" if succeeded, "false" if an error occurred.
+ *
+ */
+
+bool l1t::TriggerMenuParser::parseCaloWithOverlapRemoval(tmeventsetup::esCondition condCalo,
+        unsigned int chipNr) {
+
+
+//    XERCES_CPP_NAMESPACE_USE
+    using namespace tmeventsetup;
+    
+    // get condition, particle name and type name
+
+    std::string condition = "calo-with-overlap-removal";
+    std::string particle = "test-fix" ;
+    std::string type = l1t2string( condCalo.getType() );
+    std::string name = l1t2string( condCalo.getName() );
+
+    LogDebug("TriggerMenuParser")
+      << "\n ****************************************** " 
+      << "\n      (in parseCaloWithOverlapRemoval) " 
+      << "\n condition = " << condition 
+      << "\n particle  = " << particle 
+      << "\n type      = " << type 
+      << "\n name      = " << name 
+      << std::endl;
+
+
+    GtConditionType cType = l1t::TypeNull; 
+
+    // determine condition type, 
+    int nrObj = -1;
+
+    switch(condCalo.getType()) {
+      case esConditionType::SingleEgammaWithOverlapRemoval:
+      case esConditionType::SingleJetWithOverlapRemoval:
+      case esConditionType::SingleTauWithOverlapRemoval:
+	type = "1_s_withOverlapRemoval";
+	cType= l1t::Type1sWithOverlapRemoval;
+	nrObj = 2;
+        break;
+      case esConditionType::DoubleEgammaWithOverlapRemoval:
+      case esConditionType::DoubleJetWithOverlapRemoval:
+      case esConditionType::DoubleTauWithOverlapRemoval:
+	type = "2_s_withOverlapRemoval";
+	cType= l1t::Type2sWithOverlapRemoval;
+	nrObj = 3;	
+        break;
+      case esConditionType::TripleEgammaWithOverlapRemoval:
+      case esConditionType::TripleJetWithOverlapRemoval:
+      case esConditionType::TripleTauWithOverlapRemoval:
+	cType= l1t::Type3sWithOverlapRemoval;
+	type = "3_s_withOverlapRemoval";
+	nrObj = 4;
+        break;
+      case esConditionType::QuadEgammaWithOverlapRemoval:
+      case esConditionType::QuadJetWithOverlapRemoval:
+      case esConditionType::QuadTauWithOverlapRemoval:
+	cType= l1t::Type4sWithOverlapRemoval;
+	type = "4_s_withOverlapRemoval";
+	nrObj = 5;
+        break;
+      default:
+        edm::LogError("TriggerMenuParser") << "Wrong particle for calo-with-overlap-removal-condition ("
+            << particle << ")" << std::endl;
+        return false;
+        break;
+    }
+
+     // std::string str_etComparison = l1t2string( condCalo.comparison_operator() );
+
+    if (nrObj < 0) {
+        edm::LogError("TriggerMenuParser") << "Unknown type for calo-with-overlap-removal-condition (" << type
+            << ")" << "\nCan not determine number of trigger objects. " << std::endl;
+        return false;
+    }
+
+    // get values
+
+    // temporary storage of the parameters
+    std::vector<CaloWithOverlapRemovalTemplate::ObjectParameter> objParameter(nrObj);
+
+    CaloWithOverlapRemovalTemplate::OverlapRemovalParameter corrParameter;
+
+    // need at least one value for deltaPhiRange
+    std::vector<boost::uint64_t> tmpValues((nrObj > 1) ? nrObj : 1);
+    tmpValues.reserve( nrObj );
+
+
+    if( int(condCalo.getObjects().size())!=nrObj ){
+      edm::LogError("TriggerMenuParser") << " condCalo objects: nrObj = " << nrObj
+						    << "condCalo.getObjects().size() = " 
+						    << condCalo.getObjects().size()
+						    << std::endl;
+      return false;
+    }
+
+    // parse the overlap removal parameters
+    int cutType = 0;  
+    const std::vector<esCut>& cuts = condCalo.getCuts();      
+    for (size_t jj = 0; jj < cuts.size(); jj++) {
+
+      const esCut cut = cuts.at(jj);
+      //
+      double minV = cut.getMinimum().value;
+      double maxV = cut.getMaximum().value;
+           
+      //Scale down very large numbers out of xml
+      if(maxV > 1.0e8) maxV = 1.0e8;
+      
+      if(cut.getCutType() == esCutType::OverlapRemovalDeltaEta) {
+         //std::cout << "OverlapRemovalDeltaEta Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+         corrParameter.minOverlapRemovalEtaCutValue = (long long)(minV * pow(10.,cut.getMinimum().index)); 
+         corrParameter.maxOverlapRemovalEtaCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index)); 
+         corrParameter.precOverlapRemovalEtaCut     = cut.getMinimum().index;	     
+         cutType = cutType | 0x10;
+      } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaPhi) {
+         //std::cout << "OverlapRemovalDeltaPhi Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+         corrParameter.minOverlapRemovalPhiCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+         corrParameter.maxOverlapRemovalPhiCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+         corrParameter.precOverlapRemovalPhiCut     = cut.getMinimum().index;
+         cutType = cutType | 0x20;
+      } else if (cut.getCutType() == esCutType::OverlapRemovalDeltaR) {
+         //std::cout << "DeltaR Cut minV = " << minV << " Max = " << maxV << " precMin = " << cut.getMinimum().index << " precMax = " << cut.getMaximum().index << std::endl;
+         corrParameter.minOverlapRemovalDRCutValue = (long long)(minV * pow(10.,cut.getMinimum().index));
+         corrParameter.maxOverlapRemovalDRCutValue = (long long)(maxV * pow(10.,cut.getMaximum().index));
+         corrParameter.precOverlapRemovalDRCut     = cut.getMinimum().index;
+         cutType = cutType | 0x40; 
+      }
+
+    }
+    corrParameter.overlapCutType = cutType;
+    
+
+    // BLW TO DO: These needs to the added to the object rather than the whole condition.
+    int relativeBx = 0;
+    bool gEq = false;
+
+    std::vector<GlobalObject> objType(nrObj);
+    std::vector<GtConditionCategory> condCateg(nrObj,CondCalo);
+    std::vector<int> caloWORIndexVal(nrObj,-1);
+    std::vector<int> intGEq(nrObj,-1);
+
+    // std::string str_condCalo = "";
+    // boost::uint64_t tempUIntH, tempUIntL;
+    // boost::uint64_t dst;
+    int cnt = 0;
+
+    // Loop over objects and extract the cuts on the objects
+    const std::vector<esObject>& objects = condCalo.getObjects();
+    for (size_t jj = 0; jj < objects.size(); jj++) {   
+
+       const esObject object = objects.at(jj);
+       gEq =  (object.getComparisonOperator() == esComparisonOperator::GE);
+
+       //  BLW TO DO: This needs to be added to the Object Parameters   
+       relativeBx = object.getBxOffset();
+       if(object.getType() == esObjectType::Muon) {
+	  // we have a muon  
+
+          parseMuonCorr(&object,chipNr);
+	  caloWORIndexVal[jj] = (m_corMuonTemplate[chipNr]).size() - 1;	     
+
+          //Now set some flags for this subCondition
+	  intGEq[jj] = (object.getComparisonOperator() == esComparisonOperator::GE);
+          objType[jj] = gtMu;
+          condCateg[jj] = CondMuon;
+	  
+       } 
+       else if(object.getType() == esObjectType::Egamma ||
+	          object.getType() == esObjectType::Jet    ||
+		  object.getType() == esObjectType::Tau ) {
+	  // we have an Calo object
+
+          parseCaloCorr(&object,chipNr);
+	  caloWORIndexVal[jj] = (m_corCaloTemplate[chipNr]).size() - 1;
+          
+          //Now set some flags for this subCondition
+	  intGEq[jj] = (object.getComparisonOperator() == esComparisonOperator::GE);
+          switch(object.getType()) {
+	     case esObjectType::Egamma: { 
+	      objType[jj] = gtEG;
+	     }
+	        break;
+	     case esObjectType::Jet: { 
+	      objType[jj] = gtJet;
+	     }
+	        break;
+	     case esObjectType::Tau: { 
+	      objType[jj] = gtTau;
+	     }
+	        break;
+	      default: {
+	      }
+	        break;	
+          }		 
+          condCateg[jj] = CondCalo;
+
+       } 
+       else {
+	
+          edm::LogError("TriggerMenuParser")
+                  << "Illegal Object Type " << object.getType() 
+                  << " for the correlation condition " << name << std::endl;
+          return false;	     
+
+        }  //if block on leg types
+
+        //  Loop over the cuts for this object
+        int upperThresholdInd = -1;
+	int lowerThresholdInd = 0;
+        int upperIndexInd = -1;
+        int lowerIndexInd = 0;
+        int cntEta = 0;
+        unsigned int etaWindow1Lower=-1, etaWindow1Upper=-1, etaWindow2Lower=-1, etaWindow2Upper=-1;
+	int cntPhi = 0;
+	unsigned int phiWindow1Lower=-1, phiWindow1Upper=-1, phiWindow2Lower=-1, phiWindow2Upper=-1;
+        int isolationLUT = 0xF; //default is to ignore isolation unless specified.
+	int qualityLUT   = 0xF; //default is to ignore quality unless specified.	
+		
+        const std::vector<esCut>& cuts = object.getCuts();
+        for (size_t kk = 0; kk < cuts.size(); kk++)
+        {
+          const esCut cut = cuts.at(kk); 
+	 
+	  switch(cut.getCutType()){
+	     case esCutType::Threshold:
+	       lowerThresholdInd = cut.getMinimum().index;
+	       upperThresholdInd = cut.getMaximum().index;
+	       break;
+	     case esCutType::Index:
+	       lowerIndexInd = int(cut.getMinimum().value);
+	       upperIndexInd = int(cut.getMaximum().value);
+	       break;
+	     case esCutType::Eta: {
+	       
+                 if(cntEta == 0) {
+		    etaWindow1Lower = cut.getMinimum().index;
+		    etaWindow1Upper = cut.getMaximum().index;
+		 } else if(cntEta == 1) {
+		    etaWindow2Lower = cut.getMinimum().index;
+		    etaWindow2Upper = cut.getMaximum().index;
+                 } else {
+        	   edm::LogError("TriggerMenuParser") << "Too Many Eta Cuts for calo-condition ("
+        	       << particle << ")" << std::endl;
+        	   return false;
+		 }
+		 cntEta++; 
+
+	       } break;
+	       
+	     case esCutType::Phi: {
+
+                if(cntPhi == 0) {
+		    phiWindow1Lower = cut.getMinimum().index;
+		    phiWindow1Upper = cut.getMaximum().index;
+		 } else if(cntPhi == 1) {
+		    phiWindow2Lower = cut.getMinimum().index;
+		    phiWindow2Upper = cut.getMaximum().index;
+                 } else {
+        	   edm::LogError("TriggerMenuParser") << "Too Many Phi Cuts for calo-condition ("
+        	       << particle << ")" << std::endl;
+        	   return false;
+		 }
+		 cntPhi++; 
+
+	       }break;
+	       
+	     case esCutType::Charge: {
+
+       	         edm::LogError("TriggerMenuParser") << "No charge cut for calo-condition ("
+        	       << particle << ")" << std::endl;
+        	   return false;
+
+	       }break;
+	     case esCutType::Quality: {
+             
+	       qualityLUT = l1tstr2int(cut.getData());
+
+	       }break;
+	     case esCutType::Isolation: {
+
+               isolationLUT = l1tstr2int(cut.getData());
+		       
+	       } break;
+	     default:
+	       break; 	       	       	       	       
+	  } //end switch 
+
+	  
+        } //end loop over cuts
+
+        // Fill the object parameters
+	objParameter[cnt].etHighThreshold = upperThresholdInd;
+	objParameter[cnt].etLowThreshold  = lowerThresholdInd;
+	objParameter[cnt].indexHigh = upperIndexInd;
+	objParameter[cnt].indexLow  = lowerIndexInd;
+	objParameter[cnt].etaWindow1Lower     = etaWindow1Lower;
+	objParameter[cnt].etaWindow1Upper     = etaWindow1Upper;
+	objParameter[cnt].etaWindow2Lower = etaWindow2Lower;
+	objParameter[cnt].etaWindow2Upper = etaWindow2Upper;
+	objParameter[cnt].phiWindow1Lower     = phiWindow1Lower;
+	objParameter[cnt].phiWindow1Upper     = phiWindow1Upper;
+	objParameter[cnt].phiWindow2Lower = phiWindow2Lower;
+	objParameter[cnt].phiWindow2Upper = phiWindow2Upper;
+        objParameter[cnt].isolationLUT       = isolationLUT;
+        objParameter[cnt].qualityLUT         = qualityLUT; //TO DO: Must add 
+
+      // Output for debugging
+      LogDebug("TriggerMenuParser") 
+	<< "\n      Calo/Mu ET/PT high thresholds (hex) for calo object " << objType[cnt] << " " << cnt << " = "
+	<< std::hex << objParameter[cnt].etLowThreshold << " - " << objParameter[cnt].etHighThreshold 
+	<< "\n      etaWindow Lower / Upper for calo object " << cnt << " = 0x"
+	<< objParameter[cnt].etaWindow1Lower << " / 0x" << objParameter[cnt].etaWindow1Upper
+	<< "\n      etaWindowVeto Lower / Upper for calo object " << cnt << " = 0x"
+	<< objParameter[cnt].etaWindow2Lower << " / 0x" << objParameter[cnt].etaWindow2Upper
+	<< "\n      phiWindow Lower / Upper for calo object " << cnt << " = 0x"
+	<< objParameter[cnt].phiWindow1Lower << " / 0x" << objParameter[cnt].phiWindow1Upper
+	<< "\n      phiWindowVeto Lower / Upper for calo object " << cnt << " = 0x"
+	<< objParameter[cnt].phiWindow2Lower << " / 0x" << objParameter[cnt].phiWindow2Upper
+	<< "\n      Isolation LUT for calo object " << cnt << " = 0x"
+	<< objParameter[cnt].isolationLUT
+	<< "\n      Quality LUT for calo object " << cnt << " = 0x"
+	<< objParameter[cnt].qualityLUT << std::dec
+	<< std::endl;
+
+      cnt++;
+    } //end loop over objects
+
+
+    // now create a new calo condition
+    CaloWithOverlapRemovalTemplate caloWORCond(name);
+    caloWORCond.setCond0Category(condCateg[0]);
+    caloWORCond.setCondOvrCategory(condCateg[nrObj-1]);
+
+    caloWORCond.setCond0Index(caloWORIndexVal[0]);
+    caloWORCond.setCondOvrIndex(caloWORIndexVal[nrObj-1]);
+
+    caloWORCond.setCondType(cType);
+    caloWORCond.setObjectType(objType);
+    
+    //VR TO DO: This needs to be added to the object rather than the whole condition
+    caloWORCond.setCondGEq(gEq);
+    caloWORCond.setCondChipNr(chipNr);
+    
+    //VR TO DO: This needs to be added to the object rather than the whole condition
+    caloWORCond.setCondRelativeBx(relativeBx);
+
+    caloWORCond.setConditionWithOverlapRemovalParameter(objParameter, corrParameter);
+
+    if (edm::isDebugEnabled() ) {
+
+        std::ostringstream myCoutStream;
+        caloWORCond.print(myCoutStream);
+        LogTrace("TriggerMenuParser") << myCoutStream.str() << "\n" << std::endl;
+
+    }
+
+
+    // insert condition into the map
+    if ( !insertConditionIntoMap(caloWORCond, chipNr)) {
+
+        edm::LogError("TriggerMenuParser")
+                << "    Error: duplicate condition (" << name << ")"
+                << std::endl;
+
+        return false;
+    }
+    else {
+
+        (m_vecCaloWithOverlapRemovalTemplate[chipNr]).push_back(caloWORCond);
+    }
+
+
+    //
+    return true;
+}
+
+
+
+/**
  * parseCalo Parse a calo condition and insert an entry to the conditions map
  *
  * @param node The corresponding node.
@@ -3028,11 +3408,11 @@ bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
     CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalParameter corrParameter;
     corrParameter.chargeCorrelation = 1; //ignore charge correlation for corr-legs
 
-// Get the correlation Cuts on the legs
-      int cutType = 0;  
-      const std::vector<esCut>& cuts = corrCond.getCuts();      
-      for (size_t jj = 0; jj < cuts.size(); jj++)
-      {
+    // Get the correlation with overlap-removal Cuts on the legs
+    int cutType = 0;  
+    const std::vector<esCut>& cuts = corrCond.getCuts();      
+    for (size_t jj = 0; jj < cuts.size(); jj++)
+    {
         const esCut cut = cuts.at(jj);
 
         if(cut.getCutType() == esCutType::ChargeCorrelation) { 
@@ -3100,7 +3480,7 @@ bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
       }
       corrParameter.corrCutType = cutType;
 
-// Get the two objects that form the legs
+      // Get the two objects that form the legs
       const std::vector<esObject>& objects = corrCond.getObjects();
       if(objects.size() != 3) {
             edm::LogError("TriggerMenuParser")
@@ -3108,7 +3488,7 @@ bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
             return false;      
       }
       
-// loop over legs      
+      // loop over legs      
       for (size_t jj = 0; jj < objects.size(); jj++)
       {
         const esObject& object = objects.at(jj);
@@ -3119,7 +3499,7 @@ bool l1t::TriggerMenuParser::parseCorrelationWithOverlapRemoval(
         //std::cout << "type = done" << std::endl;
 
 
-// check the leg type
+        // check the leg type
         if(object.getType() == esObjectType::Muon) {
 	  // we have a muon  
 

@@ -36,6 +36,7 @@
 #include "L1Trigger/L1TGlobal/interface/ExternalTemplate.h"
 #include "L1Trigger/L1TGlobal/interface/CorrelationTemplate.h"
 #include "L1Trigger/L1TGlobal/interface/CorrelationWithOverlapRemovalTemplate.h"
+#include "L1Trigger/L1TGlobal/interface/CaloWithOverlapRemovalTemplate.h"
 
 
 // forward declarations

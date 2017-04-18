@@ -1,12 +1,18 @@
 <lcgdict>
   <class name="CorrelationTemplate"/>
-  <class name="CorrelationWithOverlapRemovalTemplate"/>
   <class name="CorrelationTemplate::CorrelationParameter"/>
-  <class name="CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalParameter"/>
   <class name="std::vector<CorrelationTemplate>"/>
   <class name="std::vector<std::vector<CorrelationTemplate> >"/>
+  <class name="CorrelationWithOverlapRemovalTemplate"/>
+  <class name="CorrelationWithOverlapRemovalTemplate::CorrelationWithOverlapRemovalParameter"/>
   <class name="std::vector<CorrelationWithOverlapRemovalTemplate>"/>
   <class name="std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> >"/>
+  <class name="CaloWithOverlapRemovalTemplate"/>
+  <class name="CaloWithOverlapRemovalTemplate::ObjectParameter"/>
+  <class name="std::vector<CaloWithOverlapRemovalTemplate::ObjectParameter>"/>
+  <class name="CaloWithOverlapRemovalTemplate::OverlapRemovalParameter"/>
+  <class name="std::vector<CaloWithOverlapRemovalTemplate>"/>
+  <class name="std::vector<std::vector<CaloWithOverlapRemovalTemplate> >"/>
   <class name="TriggerMenu" class_version="TriggerMenu_V01">
     <field name="m_conditionMap" transient="true" />
     <field name="m_algorithmAliasMap" mapping="blob" />
@@ -20,6 +26,7 @@
     <field name="m_vecCastorTemplate" mapping="blob" />
     <field name="m_vecCorrelationTemplate" mapping="blob" />
     <field name="m_vecCorrelationWithOverlapRemovalTemplate" mapping="blob" />
+    <field name="m_vecCaloWithOverlapRemovalTemplate" mapping="blob" />
     <field name="m_vecEnergySumTemplate" mapping="blob" />
     <field name="m_vecExternalTemplate" mapping="blob" />
     <field name="m_vecHfBitCountsTemplate" mapping="blob" />

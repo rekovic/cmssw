@@ -59,10 +59,11 @@ public:
             const std::vector<std::vector<EnergySumTemplate> >&,
             const std::vector<std::vector<ExternalTemplate> >&,
             const std::vector<std::vector<CorrelationTemplate> >&,
-            const std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> >&,
             const std::vector<std::vector<MuonTemplate> >&,
             const std::vector<std::vector<CaloTemplate> >&,
-            const std::vector<std::vector<EnergySumTemplate> >&
+            const std::vector<std::vector<EnergySumTemplate> >&,
+            const std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> >&,
+            const std::vector<std::vector<CaloWithOverlapRemovalTemplate> >&
     );
 
     // copy constructor
@@ -175,6 +176,16 @@ public:
             const std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> >&);
 
     //
+    inline const std::vector<std::vector<CaloWithOverlapRemovalTemplate> >&
+        vecCaloWithOverlapRemovalTemplate() const {
+
+        return m_vecCaloWithOverlapRemovalTemplate;
+    }
+
+    void setVecCaloWithOverlapRemovalTemplate(
+            const std::vector<std::vector<CaloWithOverlapRemovalTemplate> >&);
+
+    //
     inline const std::vector<std::vector<MuonTemplate> >& corMuonTemplate() const {
         return m_corMuonTemplate;
     }
@@ -267,10 +278,11 @@ private:
     std::vector<std::vector<ExternalTemplate> > m_vecExternalTemplate;
 
     std::vector<std::vector<CorrelationTemplate> > m_vecCorrelationTemplate;
-    std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> > m_vecCorrelationWithOverlapRemovalTemplate;
     std::vector<std::vector<MuonTemplate> > m_corMuonTemplate;
     std::vector<std::vector<CaloTemplate> > m_corCaloTemplate;
     std::vector<std::vector<EnergySumTemplate> > m_corEnergySumTemplate;
+    std::vector<std::vector<CorrelationWithOverlapRemovalTemplate> > m_vecCorrelationWithOverlapRemovalTemplate;
+    std::vector<std::vector<CaloWithOverlapRemovalTemplate> > m_vecCaloWithOverlapRemovalTemplate;
 
     /// map containing the physics algorithms (by name)
     l1t::AlgorithmMap m_algorithmMap;

@@ -94,6 +94,8 @@ std::shared_ptr<L1TMuonEndCapParams> L1TMuonEndcapParamsOnlineProd::newObject(co
     retval->firmwareVersion_ = sinceEpoch;
     retval->PtAssignVersion_ = conf["pt_lut_version"].getValue<unsigned int>();
 
+//KK add pcLuts timestamp here ...
+
     return retval;
 }
 

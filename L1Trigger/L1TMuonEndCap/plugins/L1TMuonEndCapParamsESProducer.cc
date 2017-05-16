@@ -32,10 +32,12 @@ L1TMuonEndCapParamsESProducer::L1TMuonEndCapParamsESProducer(const edm::Paramete
 {
    setWhatProduced(this);
 
-   params.PtAssignVersion_   = iConfig.getParameter<int>("PtAssignVersion");
-   params.firmwareVersion_   = iConfig.getParameter<int>("firmwareVersion");
-   // Not yet implemented in O2O
-   // params.PrimConvVersion_   = iConfig.getParameter<int>("PrimConvVersion");
+   data_.SetPtAssignVersion(iConfig.getParameter<int>("PtAssignVersion"));
+   data_.SetFirmwareVersion(iConfig.getParameter<int>("firmwareVersion"));
+   data_.SetPcLutVersion   (iConfig.getParameter<int>("pcLutVersion"));
+      
+}
+
 
 }
 

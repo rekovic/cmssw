@@ -9,13 +9,10 @@ emtfParamsSource = cms.ESSource(
 
 ## EMTF ESProducer. Fills CondFormats from XML files.
 emtfParams = cms.ESProducer(
-    "L1TMuonEndCapParamsESProducer",
-    PtAssignVersion = cms.int32(1),
-    firmwareVersion = cms.int32(12345),
-    ## Not yet implemented in O2O
-    ## v1 corresponds to data/emtf_luts/ph_lut_v1, used for all of 2016
-    ## v2 corresponds to data/emtf_luts/ph_lut_v2, used at the beginning of 2017
-    PrimConvVersion = cms.int32(2)
+	"L1TMuonEndCapParamsESProducer",
+   PtAssignVersion = cms.int32(4),
+   firmwareVersion = cms.int32(50),
+   pcLutVersion    = cms.int32(1)
 )
 
 

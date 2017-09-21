@@ -174,6 +174,20 @@ def L1TReEmulFromRAWCalouGT(process):
     process.simGtStage2Digis.MuonInputTag   = cms.InputTag("gtStage2Digis","Muon")
     return process 
 
+def L1TReEmulFromRAWCaloLayer2(process):
+    L1TReEmulFromRAW(process)
+    process.simCaloStage2Layer1Digis.towerToken = cms.InputTag("caloStage2Layer1Digis")
+    return process 
+
+def L1TReEmulFromRAWuGT(process):
+    L1TReEmulFromRAW(process)
+    process.simGtStage2Digis.MuonInputTag   = cms.InputTag("gtStage2Digis","Muon")
+    process.simGtStage2Digis.EGammaInputTag   = cms.InputTag("gtStage2Digis","EGamma")
+    process.simGtStage2Digis.TauInputTag   = cms.InputTag("gtStage2Digis","Tau")
+    process.simGtStage2Digis.JetInputTag   = cms.InputTag("gtStage2Digis","Jet")
+    process.simGtStage2Digis.EtSumInputTag   = cms.InputTag("gtStage2Digis","EtSum")
+    return process 
+
 
 def L1TReEmulMCFromRAW(process):
     L1TReEmulFromRAW(process)

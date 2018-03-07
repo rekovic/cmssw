@@ -11,6 +11,7 @@ namespace l1t {
   typedef edm::RefVector< MuonPhase2BxCollection > MuonPhase2RefVector ;
   typedef std::vector< MuonPhase2Ref > MuonPhase2VectorRef ;
 
+  // add blah blah
   class MuonPhase2 : public Muon {
 
   public:

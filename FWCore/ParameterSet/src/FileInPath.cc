@@ -1,7 +1,6 @@
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 
-#include <atomic>
 #include <cstdlib>
 #include <vector>
 #include "boost/filesystem/path.hpp"
@@ -16,12 +15,9 @@ namespace bf = boost::filesystem;
 
 namespace
 {
-
-  std::atomic<bool> s_fileLookupDisabled{false};
-
   /// These are the names of the environment variables which control
-  /// the behavior  of the FileInPath  class.  They are local to  this
-  /// class; other code should not even know about them!
+/// the behavior  of the FileInPath  class.  They are local to  this
+/// class; other code should not even know about them!
 
   const std::string PathVariableName("CMSSW_SEARCH_PATH");
   // Environment variables for local and release areas:
@@ -115,9 +111,6 @@ namespace edm
     canonicalFilename_(),
     location_(Unknown)
   {
-    if (s_fileLookupDisabled) {
-      return;
-    }
     getEnvironment();
   }
 
@@ -126,9 +119,6 @@ namespace edm
     canonicalFilename_(),
     location_(Unknown)
   {
-    if (s_fileLookupDisabled) {
-      return;
-    }
     getEnvironment();
     initialize_();
   }
@@ -138,9 +128,6 @@ namespace edm
     canonicalFilename_(),
     location_(Unknown)
   {
-    if (s_fileLookupDisabled) {
-      return;
-    }
     if(r == nullptr) {
      throw edm::Exception(edm::errors::FileInPathError) << "Relative path must not be null\n";
     }
@@ -519,10 +506,6 @@ namespace edm
       << "\nCurrent directory is: "
       << bf::initial_path().string()
       << "\n";
-  }
-
-  void FileInPath::disableFileLookup() {
-    s_fileLookupDisabled = true;
   }
 
 }

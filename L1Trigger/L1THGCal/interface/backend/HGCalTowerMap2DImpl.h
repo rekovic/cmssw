@@ -37,6 +37,8 @@ class HGCalTowerMap2DImpl{
 
   HGCalTriggerTowerGeometryHelper towerGeometryHelper_;
 
+  HGCalTriggerTowerGeometryHelper towerGeometryHelper_;
+
 };
 
 

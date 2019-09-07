@@ -118,10 +118,14 @@ L1TkMuonStubProducer::L1TkMuonStubProducer(const edm::ParameterSet& iConfig) :
       std::string fIn_bounds_name = iConfig.getParameter<edm::FileInPath>("emtfcorr_boundaries").fullPath();
       std::string fIn_theta_name  = iConfig.getParameter<edm::FileInPath>("emtfcorr_theta_windows").fullPath();
       std::string fIn_phi_name    = iConfig.getParameter<edm::FileInPath>("emtfcorr_phi_windows").fullPath();
+      std::string fIn_S1_theta_name  = iConfig.getParameter<edm::FileInPath>("emtfcorr_S1_theta_windows").fullPath();
+      std::string fIn_S1_phi_name    = iConfig.getParameter<edm::FileInPath>("emtfcorr_S1_phi_windows").fullPath();
       auto bounds = L1TkMuCorrDynamicWindows::prepare_corr_bounds(fIn_bounds_name.c_str(), "h_dphi_l");
       TFile* fIn_theta = TFile::Open (fIn_theta_name.c_str());
       TFile* fIn_phi   = TFile::Open (fIn_phi_name.c_str());
-      dwcorr_ = std::unique_ptr<L1TkMuCorrDynamicWindows> (new L1TkMuCorrDynamicWindows(bounds, fIn_theta, fIn_phi));
+      TFile* fIn_S1_theta = TFile::Open (fIn_theta_name.c_str());
+      TFile* fIn_S1_phi   = TFile::Open (fIn_phi_name.c_str());
+      dwcorr_ = std::unique_ptr<L1TkMuCorrDynamicWindows> (new L1TkMuCorrDynamicWindows(bounds, fIn_theta, fIn_phi, fIn_S1_theta, fIn_S1_phi));
 
       // files can be closed since the correlator code clones the TF1s
       fIn_theta->Close();

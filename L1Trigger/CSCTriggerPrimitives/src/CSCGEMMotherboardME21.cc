@@ -40,6 +40,8 @@ CSCGEMMotherboardME21::run(const CSCWireDigiCollection* wiredc,
   setupGeometry();
   debugLUTs();
 
+  //  generator_->generateLUTs(theEndcap, theStation, theSector, theSubsector, theTrigChamber);
+
   if (gem_g != nullptr) {
     if (infoV >= 0) edm::LogInfo("CSCGEMMotherboardME21|SetupInfo")
                       << "+++ run() called for GEM-CSC integrated trigger! +++ \n";
@@ -146,25 +148,26 @@ CSCGEMMotherboardME21::run(const CSCWireDigiCollection* wiredc,
                                      mCoPads);
 
           if (dropLowQualityCLCTsNoGEMs_ and lowQuality and hasPads) {
-            int nFound(mPads.size());
-            const bool clctInEdge(clctProc->getBestCLCT(bx_clct).getKeyStrip() < 5 or
-                                  clctProc->getBestCLCT(bx_clct).getKeyStrip() > 155);
-            if (clctInEdge) {
-              if (debug_matching)
-                LogTrace("CSCGEMCMotherboardME21")
-                    << "\tInfo: low quality CLCT in CSC chamber edge, don't care about GEM pads" << std::endl;
-            } else {
-              if (nFound != 0) {
-                if (debug_matching)
-                  LogTrace("CSCGEMCMotherboardME21")
-                      << "\tInfo: low quality CLCT with " << nFound << " matching GEM trigger pads" << std::endl;
-              } else {
-                if (debug_matching)
-                  LogTrace("CSCGEMCMotherboardME21")
-                      << "\tWarning: low quality CLCT without matching GEM trigger pad" << std::endl;
-                continue;
-              }
-            }
+            continue;
+            // int nFound(mPads.size());
+            // const bool clctInEdge(clctProc->getBestCLCT(bx_clct).getKeyStrip() < 5 or
+            //                       clctProc->getBestCLCT(bx_clct).getKeyStrip() > 155);
+            // if (clctInEdge) {
+            //   if (debug_matching)
+            //     LogTrace("CSCGEMCMotherboardME21")
+            //         << "\tInfo: low quality CLCT in CSC chamber edge, don't care about GEM pads" << std::endl;
+            // } else {
+            //   if (nFound != 0) {
+            //     if (debug_matching)
+            //       LogTrace("CSCGEMCMotherboardME21")
+            //           << "\tInfo: low quality CLCT with " << nFound << " matching GEM trigger pads" << std::endl;
+            //   } else {
+            //     if (debug_matching)
+            //       LogTrace("CSCGEMCMotherboardME21")
+            //           << "\tWarning: low quality CLCT without matching GEM trigger pad" << std::endl;
+            //     continue;
+            //   }
+            // }
           }
 
           ++nSuccessFulMatches;

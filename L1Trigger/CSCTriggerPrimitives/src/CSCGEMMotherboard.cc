@@ -312,21 +312,21 @@ void CSCGEMMotherboard::setupGeometry()
 
 void CSCGEMMotherboard::printGEMTriggerPads(int bx_start, int bx_stop, enum CSCPart part)
 {
-  std::cout << "------------------------------------------------------------------------" << std::endl;
-  std::cout << "* GEM trigger pads: " << std::endl;
+  LogTrace("CSCGEMMotherboard") << "------------------------------------------------------------------------" << std::endl;
+  LogTrace("CSCGEMMotherboard") << "* GEM trigger pads: " << std::endl;
 
   for (int bx = bx_start; bx <= bx_stop; bx++) {
     const auto& in_pads = pads_[bx];
-    std::cout << "N(pads) BX " << bx << " : " << in_pads.size() << std::endl;
+    LogTrace("CSCGEMMotherboard") << "N(pads) BX " << bx << " : " << in_pads.size() << std::endl;
 
     for (const auto& pad : in_pads){
-      std::cout << "\tdetId " << GEMDetId(pad.first) << ", pad = " << pad.second;
+      LogTrace("CSCGEMMotherboard") << "\tdetId " << GEMDetId(pad.first) << ", pad = " << pad.second;
       const auto& roll_id(GEMDetId(pad.first));
 
       if (part==CSCPart::ME11 and isPadInOverlap(GEMDetId(roll_id).roll()))
-        std::cout << " (in overlap)" << std::endl;
+        LogTrace("CSCGEMMotherboard") << " (in overlap)" << std::endl;
       else
-        std::cout << std::endl;
+        LogTrace("CSCGEMMotherboard") << std::endl;
     }
   }
 }
@@ -334,19 +334,19 @@ void CSCGEMMotherboard::printGEMTriggerPads(int bx_start, int bx_stop, enum CSCP
 
 void CSCGEMMotherboard::printGEMTriggerCoPads(int bx_start, int bx_stop, enum CSCPart part)
 {
-  std::cout << "------------------------------------------------------------------------" << std::endl;
-  std::cout << "* GEM trigger coincidence pads: " << std::endl;
+  LogTrace("CSCGEMMotherboard") << "------------------------------------------------------------------------" << std::endl;
+  LogTrace("CSCGEMMotherboard") << "* GEM trigger coincidence pads: " << std::endl;
 
   for (int bx = bx_start; bx <= bx_stop; bx++) {
     const auto& in_pads = coPads_[bx];
-    std::cout << "N(copads) BX " << bx << " : " << in_pads.size() << std::endl;
+    LogTrace("CSCGEMMotherboard") << "N(copads) BX " << bx << " : " << in_pads.size() << std::endl;
 
     for (const auto& pad : in_pads){
-      std::cout << "\tdetId " << GEMDetId(pad.first) << ", pad = " << pad.second;
+      LogTrace("CSCGEMMotherboard") << "\tdetId " << GEMDetId(pad.first) << ", pad = " << pad.second;
       const auto& roll_id(GEMDetId(pad.first));
 
-      if (part==CSCPart::ME11 and isPadInOverlap(GEMDetId(roll_id).roll())) std::cout << " (in overlap)" << std::endl;
-      else std::cout << std::endl;
+      if (part==CSCPart::ME11 and isPadInOverlap(GEMDetId(roll_id).roll())) LogTrace("CSCGEMMotherboard") << " (in overlap)" << std::endl;
+      else LogTrace("CSCGEMMotherboard") << std::endl;
     }
   }
 }

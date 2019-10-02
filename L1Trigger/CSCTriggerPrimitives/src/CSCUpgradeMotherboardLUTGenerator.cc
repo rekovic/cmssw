@@ -102,7 +102,7 @@ void CSCUpgradeMotherboardLUTGenerator::generateLUTsME11(unsigned theEndcap, uns
   os << gemRollToCscWg1b;
 
   // print LUTs
-  std::cout  << os.str();
+  LogTrace("CSCUpgradeMotherboardLUTGenerator")  << os.str();
 }
 
 void CSCUpgradeMotherboardLUTGenerator::generateLUTsME21(unsigned theEndcap, unsigned theSector, unsigned theSubsector, unsigned theTrigChamber) const
@@ -180,8 +180,7 @@ void CSCUpgradeMotherboardLUTGenerator::generateLUTsME21(unsigned theEndcap, uns
   os << gemRollToCscWg;
 
   // print LUTs
-  std::cout  << os.str();
-  //  LogTrace("CSCUpgradeMotherboardLUTGenerator") << os.str();
+  LogTrace("CSCUpgradeMotherboardLUTGenerator") << os.str();
 }
 
 int CSCUpgradeMotherboardLUTGenerator::assignRoll(const std::vector<std::pair<double,double> >& lut, double eta) const

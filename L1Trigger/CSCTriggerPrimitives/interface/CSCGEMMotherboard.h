@@ -257,7 +257,6 @@ void CSCGEMMotherboard::matchingPads(const CSCALCTDigi& alct,
   // Get the corresponding roll numbers for a given ALCT
   std::pair<int,int> alctRoll =
     (getLUT()->get_csc_wg_to_gem_roll(theParity))[alct.getKeyWG()];
-  /* std::cout << "available rols " << alctRoll.first << " " << alctRoll.second << std::endl; */
 
   // Get the pads in the ALCT bx
   const matchesBX<T>& lut = getPads<T>();
@@ -266,13 +265,10 @@ void CSCGEMMotherboard::matchingPads(const CSCALCTDigi& alct,
   if (lut.count(alct.getBX())==0) return;
 
   for (const auto& p: lut.at(alct.getBX())){
-    /* std::cout << "checking matching pad i box " << std::endl; */
     auto padRoll(getRoll(p));
-    /* std::cout << "padRoll" << padRoll << std::endl; */
 
     // pad bx needs to match to ALCT bx
     int pad_bx = getBX(p.second)+CSCConstants::LCT_CENTRAL_BX;
-    /* std::cout << "pad_bx " << pad_bx << std::endl; */
 
     if (std::abs(alct.getBX()-pad_bx)>getMaxDeltaBX<T>()) continue;
 
@@ -395,21 +391,16 @@ S CSCGEMMotherboard::bestMatchingPad(const CSCALCTDigi& alct1,
                                      const matches<S>& pads) const
 {
   S result;
-  /* std::cout << "in function ALCT bestMatchingPad " << std::endl; */
   // no matching pads for invalid stub
   if (not alct1.isValid()) {
-    /* std::cout << "ALCT is invalid " << std::endl; */
     return result;
   }
   // return the first one with the same roll number
-  /* std::cout << "n candidates " << pads.size() << std::endl; */
   for (const auto& p: pads){
-    /* std::cout << "Checking for matching pad " << p.second << std::endl; */
     // protection against corrupted DetIds
     if (not isGEMDetId(p.first)) continue;
 
     // roll number of pad and ALCT must match
-    /* std::cout << "Check roll number " << getRoll(p) << " " << getRoll(alct1) << std::endl; */
     if (getRolls(alct1).first <= getRoll(p) and
         getRoll(p) <= getRolls(alct1).second){
       return p.second;
@@ -422,7 +413,6 @@ template <class S>
 S CSCGEMMotherboard::bestMatchingPad(const CSCCLCTDigi& clct,
                                      const matches<S>& pads) const
 {
-  /* std::cout << "in function CLCT bestMatchingPad " << std::endl; */
   S result;
   // no matching pads for invalid stub
   if (not clct.isValid()) return result;
@@ -432,16 +422,13 @@ S CSCGEMMotherboard::bestMatchingPad(const CSCCLCTDigi& clct,
   // return the pad with the smallest bending angle
   float averagePadNumberCSC = getPad(clct, part);
   float minDeltaPad = 999;
-  /* std::cout << "n candidates " << pads.size() << std::endl; */
   for (const auto& p: pads){
 
-    /* std::cout << "Checking for matching pad " << p.second << std::endl; */
     // protection against corrupted DetIds
     if (not isGEMDetId(p.first)) continue;
 
     // best pad is closest to CLCT in number of halfstrips
     float averagePadNumberGEM = getPad(p.second);
-    /* std::cout << "Check pad  number " << averagePadNumberGEM << " " << averagePadNumberCSC << std::endl; */
     if (std::abs(averagePadNumberCSC - averagePadNumberGEM) < minDeltaPad){
       minDeltaPad = std::abs(averagePadNumberCSC - averagePadNumberGEM);
       result = p.second;
@@ -458,10 +445,8 @@ S CSCGEMMotherboard::bestMatchingPad(const CSCALCTDigi& alct1,
   S result;
   // no matching pads for invalid stub
   if (not alct1.isValid() or not clct1.isValid()) {
-    /* std::cout << "ALCT or CLCT is invalid " <<std::endl; */
     return result;
   }
-  /* std::cout << "ALCT and CLCT valid " <<std::endl; */
 
   auto part(getCSCPart(clct1.getKeyStrip()));
 
@@ -475,9 +460,6 @@ S CSCGEMMotherboard::bestMatchingPad(const CSCALCTDigi& alct1,
     if (not isGEMDetId(p.first)) continue;
 
     float averagePadNumberGEM = getPad(p.second);
-    /* std::cout << "Check pad  " << p.first << " " << p.second << std::endl; */
-    /* std::cout << "Check pad  number " << averagePadNumberGEM << " " << averagePadNumberCSC << std::endl; */
-    /* std::cout << "Check roll number " << getRoll(p) << " " << getRoll(alct1) << std::endl; */
 
     // add another safety to make sure that the deltaPad is not larger than max value!!!
     if (std::abs(averagePadNumberCSC - averagePadNumberGEM) < minDeltaPad and
@@ -485,10 +467,8 @@ S CSCGEMMotherboard::bestMatchingPad(const CSCALCTDigi& alct1,
         getRoll(p) <= getRolls(alct1).second){
       minDeltaPad = std::abs(averagePadNumberCSC - averagePadNumberGEM);
       result = p.second;
-      /* std::cout << "best matching pad is " << result << std::endl; */
     }
   }
-  /* std::cout << "++++Returning best matching (co)pad is " << result << std::endl; */
   return result;
 }
 

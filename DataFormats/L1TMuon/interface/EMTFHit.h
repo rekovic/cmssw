@@ -19,6 +19,8 @@
 //#include "DataFormats/GEMDigi/interface/ME0PadDigi.h"
 #include "DataFormats/L1TMuon/interface/CPPFDigi.h"
 #include "DataFormats/L1TMuon/interface/EMTF/ME.h"
+#include "DataFormats/Common/interface/Ref.h"
+
 
 namespace l1t {
 
@@ -269,6 +271,8 @@ namespace l1t {
 
   // Define a vector of EMTFHit
   typedef std::vector<EMTFHit> EMTFHitCollection;
+  typedef edm::Ref<EMTFHitCollection> EMTFHitRef;
+  typedef std::vector<edm::Ref<EMTFHitCollection > > EMTFHitRefVector;
 
 } // End of namespace l1t
 

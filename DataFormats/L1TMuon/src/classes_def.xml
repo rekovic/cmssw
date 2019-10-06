@@ -31,6 +31,8 @@
   <class name="l1t::EMTFHit"/>
   <class name="l1t::EMTFHitCollection"/>
   <class name="edm::Wrapper<l1t::EMTFHitCollection>"/>
+  <class name="edm::Ref<l1t::EMTFHitCollection>" splitLevel="0"/>
+  <class name="edm::Wrapper<edm::Ref<l1t::EMTFHitCollection > >"/>
   <class name="l1t::EMTFRoad"/>
   <class name="l1t::EMTFRoadCollection"/>
   <class name="edm::Wrapper<l1t::EMTFRoadCollection>"/>

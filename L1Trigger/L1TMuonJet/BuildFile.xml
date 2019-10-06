@@ -1,0 +1,11 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/ParameterSet"/>
+<use name="FWCore/Utilities"/>
+<use name="DataFormats/Phase2L1TMuonJet"/>
+
+<use   name="CommonTools/Utils"/>
+<use   name="CommonTools/MVAUtils"/>
+<use   name="roottmva"/>
+<export>
+  <lib name="1"/>
+</export>

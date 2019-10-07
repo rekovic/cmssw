@@ -2,6 +2,7 @@
 <use   name="DataFormats/L1TMuon"/>
 <use   name="DataFormats/L1TrackTrigger"/>
 <use   name="rootrflx"/>
+<use   name="rootmath"/>
 <export>
   <lib   name="1"/>
 </export>

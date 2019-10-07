@@ -72,7 +72,8 @@ class L1TMuonJetProducer : public edm::stream::EDProducer<> {
       const edm::EDGetTokenT< EMTFTrackCollection >          emtfTCToken; // the track collection, directly from the EMTF and not formatted by GT
       const edm::EDGetTokenT< std::vector< TTTrack< Ref_Phase2TrackerDigi_ > > > trackToken;
 
-      double max_dR_;
+      float max_dR_;
+      float max_dZ_;
       bool debug_;
 
 };
@@ -95,6 +96,7 @@ L1TMuonJetProducer::L1TMuonJetProducer(const edm::ParameterSet& iConfig) :
   emtfTCToken(consumes< EMTFTrackCollection >         (iConfig.getParameter<edm::InputTag>("L1EMTFTrackCollectionInputTag"))),
   trackToken (consumes< std::vector<TTTrack< Ref_Phase2TrackerDigi_> > > (iConfig.getParameter<edm::InputTag>("L1TrackInputTag"))),
   max_dR_(iConfig.getParameter<double>("max_dR")) ,
+  max_dZ_(iConfig.getParameter<double>("max_dZ")) ,
   debug_(iConfig.getUntrackedParameter<bool>("debug", false))
 {
    //register your products
@@ -246,7 +248,9 @@ L1TMuonJetProducer::findMuonJets(const edm::Handle<EMTFHitCollection>& l1muonStu
 
     const L1TkMuonParticle& tkmuStub = l1tkmuStubs[i_tkms]; 
 
-    cout << " tkmustub pt " << tkmuStub.pt() << " eta " << tkmuStub.eta() << " phi " << tkmuStub.phi() << " charge " << tkmuStub.charge()  << " z_vtx " << tkmuStub.getTrkzVtx() << endl;
+    if(debug_) {
+      cout << " tkmustub pt " << tkmuStub.pt() << " eta " << tkmuStub.eta() << " phi " << tkmuStub.phi() << " charge " << tkmuStub.charge()  << " z_vtx " << tkmuStub.getTrkzVtx() << endl;
+    }
     
 
     // 2nd loop over TkMuStubs
@@ -256,19 +260,21 @@ L1TMuonJetProducer::findMuonJets(const edm::Handle<EMTFHitCollection>& l1muonStu
       for (uint k_tkms = j_tkms + 1; k_tkms < l1tkmuStubs.size(); k_tkms++) {
 
         MuonJet muonJet(l1tkmuStubs[i_tkms],l1tkmuStubs[j_tkms],l1tkmuStubs[k_tkms]);
-        muonJets.push_back(muonJet);
 
-        cout << " MuonJet : " << endl;
         /*
-        for (int i=0 ;i<3;i++) {
-          cout  << "  mu " << i << ":"
-                << " pt "  << muonJet.getPt()  [i] 
-                << " eta " << muonJet.getEta() [i] 
-                << " phi " << muonJet.getPhi() [i] 
-                << " z   " << muonJet.getZVtx()[i] 
-            <<endl;
-        }
         */
+
+        muonJet.configure(max_dR_, max_dR_, max_dR_, max_dZ_);
+        muonJet.process();
+        //if(debug_) muonJet.print(); 
+
+        // check if Valid() - max_dz, max_dR
+        if (muonJet.isValid()) {
+
+          muonJets.push_back(muonJet);
+          if(debug_) muonJet.print();
+          
+        } // end if valid
         
       } // end for k_tkms
 

@@ -5,10 +5,12 @@
 #define DataFormats_Phase2L1TMuonJet_MuonJet_H
 
 #include <vector>
+#include <Math/VectorUtil.h>
 #include "DataFormats/Common/interface/Ref.h"
 #include "DataFormats/L1Trigger/interface/L1Candidate.h"
 #include "DataFormats/L1TMuon/interface/EMTFHit.h"
 #include "DataFormats/L1TrackTrigger/interface/L1TkMuonParticle.h"
+#include "DataFormats/Math/interface/LorentzVector.h"
 
 namespace l1t {
 
@@ -26,6 +28,7 @@ namespace l1t {
 
       MuonJet(const vector<float> vpt, const vector<float> veta, const vector<float> vphi, const vector<float> zvtx); 
       MuonJet(const L1TkMuonParticle &, const L1TkMuonParticle &, const L1TkMuonParticle &);
+      MuonJet(const L1TkMuonParticle &, const L1TkMuonParticle &, const EMTFHit &);
 
       virtual ~MuonJet() {}
 
@@ -33,6 +36,12 @@ namespace l1t {
       const vector<float> & getEta() const   { return eta_; }
       const vector<float> & getPhi() const   { return phi_; }
       const vector<float> & getZVtx() const  { return zvtx_; }
+
+      void configure(float const& maxDeltaEta, float const& maxDeltaPhi, float const& maxDeltaR, float const& maxDeltaZ);
+      void process();
+      bool isValid();
+
+      void print();
 
     private:
 
@@ -46,6 +55,16 @@ namespace l1t {
       float maxDeltaEta_;
       float maxDeltaPhi_;
       float maxDeltaR_;
+      float maxDeltaZ_;
+      float maxDeltaM_;
+
+      float deltaPt_;
+      float deltaEta_;
+      float deltaPhi_;
+      float deltaR_;
+      float deltaZ_;
+      float deltaM_;
+
       float mass_;
       int totalCharge_;
   

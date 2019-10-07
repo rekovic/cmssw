@@ -10,6 +10,8 @@ l1tMuonJets = cms.EDProducer("L1TMuonJetProducer",
   L1TrackInputTag = cms.InputTag("TTTracksFromTracklet", "Level1TTTracks"),
 
   max_dR  = cms.double(0.9),
-  debug   = cms.untracked.bool(False) 
+  max_dZ  = cms.double(1.0),
+
+  debug   = cms.untracked.bool(True) 
 
 )

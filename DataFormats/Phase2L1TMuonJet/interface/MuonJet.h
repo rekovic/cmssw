@@ -24,9 +24,15 @@ namespace l1t {
       // default constructor
       MuonJet(); 
 
-      MuonJet(const vector<float> vpt, const vector<float> veta, const vector<float> vphi); 
+      MuonJet(const vector<float> vpt, const vector<float> veta, const vector<float> vphi, const vector<float> zvtx); 
+      MuonJet(const L1TkMuonParticle &, const L1TkMuonParticle &, const L1TkMuonParticle &);
 
       virtual ~MuonJet() {}
+
+      const vector<float> & getPt() const    { return pt_; }
+      const vector<float> & getEta() const   { return eta_; }
+      const vector<float> & getPhi() const   { return phi_; }
+      const vector<float> & getZVtx() const  { return zvtx_; }
 
     private:
 
@@ -34,6 +40,7 @@ namespace l1t {
       std::vector<float> pt_; //with charge sign
       std::vector<float> eta_;
       std::vector<float> phi_;
+      std::vector<float> zvtx_;
 
       float maxDeltaPt_;
       float maxDeltaEta_;

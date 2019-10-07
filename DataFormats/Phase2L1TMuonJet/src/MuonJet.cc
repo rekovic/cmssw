@@ -15,6 +15,27 @@ MuonJet::MuonJet() {
 
 }
 
-MuonJet::MuonJet(const vector<float> vpt, const vector<float> veta, const  vector<float> vphi): pt_(vpt), eta_(veta), phi_(vphi)
+MuonJet::MuonJet(const vector<float> vpt, const vector<float> veta, const  vector<float> vphi, const  vector<float> vz): pt_(vpt), eta_(veta), phi_(vphi), zvtx_(vz)
 {
+}
+
+MuonJet::MuonJet(const L1TkMuonParticle & tkMuStub_1, const L1TkMuonParticle & tkMuStub_2, const L1TkMuonParticle & tkMuStub_3) 
+{
+
+  pt_   .push_back(tkMuStub_1.pt());
+  pt_   .push_back(tkMuStub_2.pt());
+  pt_   .push_back(tkMuStub_3.pt());
+
+  eta_  .push_back(tkMuStub_1.eta());
+  eta_  .push_back(tkMuStub_2.eta());
+  eta_  .push_back(tkMuStub_3.eta());
+
+  phi_  .push_back(tkMuStub_1.phi());
+  phi_  .push_back(tkMuStub_2.phi());
+  phi_  .push_back(tkMuStub_3.phi());
+
+  zvtx_ .push_back(tkMuStub_1.getTrkzVtx());
+  zvtx_ .push_back(tkMuStub_2.getTrkzVtx());
+  zvtx_ .push_back(tkMuStub_3.getTrkzVtx());
+
 }

@@ -168,9 +168,9 @@ L1TMuonJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   //edm::Handle<L1TTTrackCollectionType> l1tksH;
   //iEvent.getByToken(trackToken, l1tksH);
 
-  MuonJetCollection out_muonjets;
+  MuonJetCollection muonjets;
 
-  findMuonJets(muonStubCH,tkmuStubCH,out_muonjets);
+  findMuonJets(muonStubCH, tkmuStubCH, muonjets);
   
 
   auto out_3Stub_muonjets              = std::make_unique<MuonJetCollection>(); 
@@ -179,18 +179,15 @@ L1TMuonJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   auto out_2TkMuStub1Stub_muonjets     = std::make_unique<MuonJetCollection>(); 
   auto out_3TkMuStub_muonjets          = std::make_unique<MuonJetCollection>(); 
 
-  std::auto_ptr<MuonJet> myMuonJet( new MuonJet );
 
-  out_3Stub_muonjets->push_back( *myMuonJet );
-  //out_1TkMuStub2Stub_muonjets->push_back( *myMuonJet );
-  //out_2TkMuStub1Stub_muonjets->push_back( *myMuonJet );
-  //out_3TkMuStub_muonjets->push_back( *myMuonJet );
+  for (const auto& p : {muonjets}){
+    out_3TkMuStub_muonjets->insert(out_3TkMuStub_muonjets->end(), p.begin(), p.end());
+  }
 
-  iEvent.put( std::move(out_3Stub_muonjets), "3Stub" );
-
-  iEvent.put( std::move(out_1TkMuStub2Stub_muonjets), "1TkMuStub2Stub");
-  iEvent.put( std::move(out_2TkMuStub1Stub_muonjets), "2TkMuStub1Stub");
-  iEvent.put( std::move(out_3TkMuStub_muonjets), "3TkMuStub");
+  iEvent.put( std::move(out_3Stub_muonjets),            "3Stub" );
+  iEvent.put( std::move(out_1TkMuStub2Stub_muonjets),   "1TkMuStub2Stub");
+  iEvent.put( std::move(out_2TkMuStub1Stub_muonjets),   "2TkMuStub1Stub");
+  iEvent.put( std::move(out_3TkMuStub_muonjets),        "3TkMuStub");
  
 }
 
@@ -247,21 +244,40 @@ L1TMuonJetProducer::findMuonJets(const edm::Handle<EMTFHitCollection>& l1muonStu
   // 1st loop over TkMuStubs
   for(uint i_tkms = 0; i_tkms < l1tkmuStubs.size(); i_tkms++) {
 
-    const L1TkMuonParticle& tkmuStub = l1tkmuStubs[i_tkms]; //.getTrkPtr();
+    const L1TkMuonParticle& tkmuStub = l1tkmuStubs[i_tkms]; 
 
-    const edm::Ptr< L1TTTrackType >& tk = tkmuStub.getTrkPtr();
-    const auto& p3 = tk->getMomentum();
-    //cout << " tkmustub pt " << tkmuStub.pt() << " eta " << tkmuStub.eta() << " phi " << tkmuStub.phi() << " charge " << tkmuStub.charge()  << " z_vtx " << tkmuStub.getTrkzVtx() << endl;
+    cout << " tkmustub pt " << tkmuStub.pt() << " eta " << tkmuStub.eta() << " phi " << tkmuStub.phi() << " charge " << tkmuStub.charge()  << " z_vtx " << tkmuStub.getTrkzVtx() << endl;
     
 
     // 2nd loop over TkMuStubs
-    for (uint j_tkms; j_tkms < l1tkmuStubs.size(); j_tkms++) {
+    for (uint j_tkms = i_tkms + 1; j_tkms < l1tkmuStubs.size(); j_tkms++) {
+
+      // 3rd loop over TkMuStubs
+      for (uint k_tkms = j_tkms + 1; k_tkms < l1tkmuStubs.size(); k_tkms++) {
+
+        MuonJet muonJet(l1tkmuStubs[i_tkms],l1tkmuStubs[j_tkms],l1tkmuStubs[k_tkms]);
+        muonJets.push_back(muonJet);
+
+        cout << " MuonJet : " << endl;
+        /*
+        for (int i=0 ;i<3;i++) {
+          cout  << "  mu " << i << ":"
+                << " pt "  << muonJet.getPt()  [i] 
+                << " eta " << muonJet.getEta() [i] 
+                << " phi " << muonJet.getPhi() [i] 
+                << " z   " << muonJet.getZVtx()[i] 
+            <<endl;
+        }
+        */
+        
+      } // end for k_tkms
 
     } // end for j_tkms
 
   } // end for i_tkms
 
 
+  return;
 
 }
  

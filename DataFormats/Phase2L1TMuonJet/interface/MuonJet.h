@@ -23,6 +23,16 @@ namespace l1t {
       typedef edm::Ref<L1TTTrackCollection> L1TTTrackRef;
       typedef std::vector<edm::Ref<L1TTTrackCollection > > L1TTrackRefVector;
 
+      enum MuonJetType
+      {
+        THREE_TKMUSTUB,
+        TWO_TKMUSTUB,
+        TWO_TKMUSTUB_ONE_MUSTUB,
+        ONE_TKMUSTUB_TWO_MUSTUB,
+        THREE_MUSTUB,
+        TWO_MUSTUB
+      };
+
       // default constructor
       MuonJet(); 
 
@@ -45,11 +55,14 @@ namespace l1t {
 
     private:
 
+      MuonJetType type_;
+
       int n_muons_;
       std::vector<float> pt_; //with charge sign
       std::vector<float> eta_;
       std::vector<float> phi_;
       std::vector<float> zvtx_;
+      std::vector<int> qual_;
 
       float maxDeltaPt_;
       float maxDeltaEta_;

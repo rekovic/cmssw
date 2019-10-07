@@ -13,6 +13,8 @@ MuonJet::MuonJet() {
   pt_.reserve(3);
   eta_.reserve(3);
   phi_.reserve(3);
+  zvtx_.reserve(3);
+  qual_.reserve(3);
 
 }
 
@@ -22,6 +24,8 @@ MuonJet::MuonJet(const vector<float> vpt, const vector<float> veta, const  vecto
 
 MuonJet::MuonJet(const L1TkMuonParticle & tkMuStub_1, const L1TkMuonParticle & tkMuStub_2, const L1TkMuonParticle & tkMuStub_3) 
 {
+
+  type_ = THREE_TKMUSTUB;
 
   pt_   .push_back(tkMuStub_1.pt());
   pt_   .push_back(tkMuStub_2.pt());
@@ -39,10 +43,16 @@ MuonJet::MuonJet(const L1TkMuonParticle & tkMuStub_1, const L1TkMuonParticle & t
   zvtx_ .push_back(tkMuStub_2.getTrkzVtx());
   zvtx_ .push_back(tkMuStub_3.getTrkzVtx());
 
+  qual_ .push_back(99);
+  qual_ .push_back(99);
+  qual_ .push_back(99);
+
 }
 
 MuonJet::MuonJet(const L1TkMuonParticle & tkMuStub_1, const L1TkMuonParticle & tkMuStub_2, const EMTFHit & muStub_1) 
 {
+  
+  type_ = TWO_TKMUSTUB_ONE_MUSTUB;
 
   pt_   .push_back(tkMuStub_1.pt());
   pt_   .push_back(tkMuStub_2.pt());
@@ -50,15 +60,19 @@ MuonJet::MuonJet(const L1TkMuonParticle & tkMuStub_1, const L1TkMuonParticle & t
 
   eta_  .push_back(tkMuStub_1.eta());
   eta_  .push_back(tkMuStub_2.eta());
-  eta_  .push_back(-99);
+  eta_  .push_back(muStub_1.Eta_sim());
 
   phi_  .push_back(tkMuStub_1.phi());
   phi_  .push_back(tkMuStub_2.phi());
-  phi_  .push_back(-99);
+  phi_  .push_back(muStub_1.Phi_sim() * TMath::Pi()/180.);
 
   zvtx_ .push_back(tkMuStub_1.getTrkzVtx());
   zvtx_ .push_back(tkMuStub_2.getTrkzVtx());
   zvtx_ .push_back(-99);
+
+  qual_  .push_back(99);
+  qual_  .push_back(99);
+  qual_  .push_back(muStub_1.Quality());
 
 }
 
@@ -137,11 +151,11 @@ bool MuonJet::isValid()
 void MuonJet::print() 
 {
 
-  printf("%10s\n","MuonJet:");
-  printf("%15s %5s %5s %5s %5s \n","muon","pt","eta","phi","z");
+  printf("%10s %5s = %1d \n","MuonJet:","type",type_);
+  printf("%15s %7s %7s %7s %7s %7s \n","muon","pt","eta","phi","z","qual");
 
   for (int i=0; i<3; i++) 
-  printf("%15d %5.2f %5.2f %5.2f %5.2f \n",i,pt_[i],eta_[i],phi_[i],zvtx_[i]);
+  printf("%15d %7.2f %7.2f %7.2f %7.2f %7d \n", i, pt_[i], eta_[i], phi_[i], zvtx_[i], qual_[i]);
 
   printf("%15s = %2.2f , %5s = %2.2f\n", "maxDeltaR", maxDeltaR_, "deltaR" , deltaR_);
   printf("%15s = %2.2f , %5s = %2.2f\n", "maxDeltaZ", maxDeltaZ_, "deltaZ" , deltaZ_);

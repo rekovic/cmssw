@@ -278,6 +278,33 @@ L1TMuonJetProducer::findMuonJets(const edm::Handle<EMTFHitCollection>& l1muonStu
         
       } // end for k_tkms
 
+
+      // loop over muon stubs
+      for(uint k_ms = 0; k_ms < l1muStubs.size(); k_ms++) {
+
+        const EMTFHit & muStub = l1muStubs[k_ms];
+        
+        // only 1st station
+        if (muStub.Station() != 1) continue;
+
+        // only CSC
+        if (muStub.Subsystem() != 1) continue;
+
+        MuonJet muonJet_2TkMuStub_1MuStub(l1tkmuStubs[i_tkms],l1tkmuStubs[j_tkms],l1muStubs[k_ms]);
+
+        muonJet_2TkMuStub_1MuStub.configure(max_dR_, max_dR_, max_dR_, max_dZ_);
+        muonJet_2TkMuStub_1MuStub.process();
+
+        // check if Valid() - max_dz, max_dR
+        if (muonJet_2TkMuStub_1MuStub.isValid()) {
+
+          muonJets.push_back(muonJet_2TkMuStub_1MuStub);
+          if(debug_) muonJet_2TkMuStub_1MuStub.print();
+          
+        } // end if valid
+
+      } // end for k_ms muon stub
+
     } // end for j_tkms
 
   } // end for i_tkms

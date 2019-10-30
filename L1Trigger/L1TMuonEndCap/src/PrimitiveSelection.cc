@@ -1032,6 +1032,7 @@ bool PrimitiveSelection::is_in_sector_me0(int tp_endcap, int tp_sector, int tp_c
   };
 
   bool add5deg = false;
+  bool sub5deg = false;
   if (includeNeighbor_) {
     if ((endcap_ == tp_endcap) && (get_other_neighbor(sector_) == tp_sector)) {
       if (tp_csc_ID == 1 && tp_endcap == 1 && tp_pad >= (767-192)) {  // higher 1/4 of chamber
@@ -1040,8 +1041,15 @@ bool PrimitiveSelection::is_in_sector_me0(int tp_endcap, int tp_sector, int tp_c
         add5deg = true;
       }
     }
+    if ((endcap_ == tp_endcap) && (sector_ == tp_sector)) {
+      if (tp_csc_ID == 1 && tp_endcap == 1 && tp_pad >= (767-192)) {  // higher 1/4 of chamber
+        sub5deg = true;
+      } else if (tp_csc_ID == 1 && tp_endcap == 2 && tp_pad <= 191) { // lower 1/4 of chamber
+        sub5deg = true;
+      }
+    }
   }
-  return is_in_sector_csc(tp_endcap, tp_sector) || add5deg;
+  return (is_in_sector_csc(tp_endcap, tp_sector) && !sub5deg) || add5deg;
 }
 
 bool PrimitiveSelection::is_in_neighbor_sector_me0(int tp_endcap, int tp_sector, int tp_csc_ID, int tp_pad) const {
@@ -1050,11 +1058,12 @@ bool PrimitiveSelection::is_in_neighbor_sector_me0(int tp_endcap, int tp_sector,
   // This means that in sector 1, CSC chamber from the neighbor sector
   // covers -5 to 15 deg, but ME0 chamber from the neighbor sector covers
   // -10 to 10 deg. 5 deg (1/4 of chamber) needs to be subtracted from
-  // -10 to -5 deg.
+  // -10 to -5 deg, and 5 deg needs to be added to cover 10 to 15 deg..
   auto get_neighbor = [](int sector) {
     return (sector == 1) ? 6 : sector - 1;
   };
 
+  bool add5deg = false;
   bool sub5deg = false;
   if (includeNeighbor_) {
     if ((endcap_ == tp_endcap) && (get_neighbor(sector_) == tp_sector)) {
@@ -1064,9 +1073,16 @@ bool PrimitiveSelection::is_in_neighbor_sector_me0(int tp_endcap, int tp_sector,
         sub5deg = true;
       }
     }
+    if ((endcap_ == tp_endcap) && (sector_ == tp_sector)) {
+      if (tp_csc_ID == 1 && tp_endcap == 1 && tp_pad >= (767-192)) {  // higher 1/4 of chamber
+        add5deg = true;
+      } else if (tp_csc_ID == 1 && tp_endcap == 2 && tp_pad <= 191) { // lower 1/4 of chamber
+        add5deg = true;
+      }
+    }
   }
   // (Note: use tp_subsector = 0, tp_station = 2)
-  return is_in_neighbor_sector_csc(tp_endcap, tp_sector, 0, 2, tp_csc_ID) && !sub5deg;
+  return (is_in_neighbor_sector_csc(tp_endcap, tp_sector, 0, 2, tp_csc_ID) && !sub5deg) || add5deg;
 }
 
 bool PrimitiveSelection::is_in_bx_me0(int tp_bx) const {

@@ -280,11 +280,16 @@ std::vector<int> L1TkMuCorrDynamicWindows::find_match(const EMTFTrackCollection&
     return unique_out;
 }
 
-std::vector<int> L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollection& l1mus, const L1TTTrackCollectionType& l1trks, const int& station, bool requireBX0)
+std::vector< int > L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollection& l1mus, const L1TTTrackCollectionType& l1trks, std::vector<std::vector<int> > &  matchedStubs, const int& station, bool requireBX0, bool requirePhaseII)
 {
     // const int nTrkPars_ = 4; // FIXME: make confiugurable from python cfg
+    cout << "This is L1TkMuCorrDynamicWindows::find_match_stub() ......... " << endl;
 
     std::vector<int> out (l1trks.size());
+
+    // one entry of vector of 10 stubs, per each track entry
+    std::vector< std::vector<int> > vectorOfMatches (l1trks.size(),vector<int>(10));
+
     for (auto l1trkit = l1trks.begin(); l1trkit != l1trks.end(); ++l1trkit)
     {
         float trk_pt      = l1trkit->getMomentum(nTrkPars_).perp();
@@ -311,14 +316,38 @@ std::vector<int> L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollecti
         int ibin = getBin(trk_aeta);
 
         std::vector<std::tuple<float, float, int>> matched; // dtheta, dphi, idx
+        std::vector<std::tuple<float, float, int>> matched_CSC; // dtheta, dphi, idx
+        std::vector<std::tuple<float, float, int>> matched_RPC; // dtheta, dphi, idx
+        std::vector<std::tuple<float, float, int>> matched_GEM; // dtheta, dphi, idx
+        std::vector<std::tuple<float, float, int>> matched_ME0; // dtheta, dphi, idx
         // loop on stubs to see which match
         for (auto l1muit = l1mus.begin(); l1muit != l1mus.end(); ++l1muit)
         {
-            int hit_station = l1muit->Station();
             // match only stubs in the central bx - as the track collection refers anyway to bx 0 only
             if (requireBX0 && l1muit->BX() != 0)
-                continue;
+              continue;
 
+            
+            // remove neighbors
+            int hit_neighbor = l1muit->Neighbor();
+            if(hit_neighbor == 1) 
+              continue;
+
+            int hit_type = l1muit->Subsystem();
+
+            // v4 design :match only to stubs from the type CSC, RPC, GEM, ME0
+            //if ( requirePhaseII && hit_type != EMTFHit::kCSC && hit_type != EMTFHit::kRPC && hit_type != EMTFHit::kGEM && hit_type != EMTFHit::kME0) 
+            // v4 design :match only to stubs from the type CSC, ME0
+            if ( requirePhaseII && hit_type != EMTFHit::kCSC && hit_type != EMTFHit::kME0) 
+            // v4 design :match only to stubs from the type CSC
+            //if ( requirePhaseII && hit_type != EMTFHit::kCSC )
+              continue;
+
+            // v3 design :match only to stubs from the type CSC, RPC 
+            if ( !requirePhaseII && hit_type != EMTFHit::kCSC && hit_type != EMTFHit::kRPC) 
+              continue;
+
+            int hit_station = l1muit->Station();
             // allow only track matching to stubs from the given station, station= 1,2,3,4
             if ( station < 5 && hit_station != station) 
               continue;
@@ -392,6 +421,10 @@ std::vector<int> L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollecti
             // }
         }
 
+        // vector to store best matched hit_idx from DT, CSC, RPC, GEM, and ME0 for each station
+        // (1st 5 for station 1, 2nd 5 for station 2, 3rd 5 for station 3, 4th 5 for station 4)
+        std::vector<int> subsystem_match(20, -1);
+
         if (reject_trk)
             matched.clear(); // quick fix - to be optimised to avoid the operations above
 
@@ -400,11 +433,55 @@ std::vector<int> L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollecti
         else
         {
             std::sort(matched.begin(), matched.end()); // closest in theta, then in phi
+
+            // set the stub_id that is closest in theta, then in phi
+            // /////////////////////////////////////////////////////
             out.at(std::distance(l1trks.begin(), l1trkit)) = std::get<2>(matched.at(0));
-        }
-    }
+
+            // identify and store the best DT, CSC, RPC, GEM, and ME0 matches
+            // //////////////////////////////////////////////////////////////
+            cout << "Track index " << std::distance(l1trks.begin(), l1trkit) << endl;
+            // loop over all matched stubs to the track at hand
+            for (auto m = matched.begin(); m != matched.end(); ++m) {
+
+                int hit_idx = std::get<2>(*m); 
+                const EMTFHit & muHit = l1mus.at(hit_idx);
+
+                int station = muHit.Station();
+
+                // only station 1
+                //if(muHit.Station() != 1) continue;
+
+                for (int i_sub = 0; i_sub < EMTFHit::kNSubsystems; ++i_sub) {
+                  
+	                if(muHit.Subsystem() == i_sub&& subsystem_match.at( (station-1)*5 + i_sub ) == -1) {
+	
+	                  float hit_eta = muHit.Eta_sim();
+	                  float hit_phi = muHit.Phi_sim();
+	                  int hit_chamber = muHit.Chamber();
+	                  cout << "        matched: hit_index = " << hit_idx << " station = " << station << " subsystem = " << i_sub << " chamber = " << hit_chamber << " hit_eta = " << hit_eta << "  hit_phi = " << hit_phi << endl;
+	                  subsystem_match.at((station-1)*5+i_sub) = hit_idx;
+	
+	                }
+
+                } // end for i_sub
+
+                cout << "      status of matched (S1_DT, S1_CSC, S1_RPC, S1_GEM, S1_ME0, S2_DT, S2_CSC, S2_RPC, S2_GEM, S2_ME0)  = ";
+                for (auto ssm = subsystem_match.begin(); ssm != subsystem_match.end(); ++ssm)
+                      cout << *ssm << ' ';
+                cout << endl;
+
+            } // end for m iterator
+
+        } // end else
+
+        vectorOfMatches.at(std::distance(l1trks.begin(), l1trkit)) = subsystem_match;
+
+    } // end for l1trkit iterator
 
     // return out;
+
+    matchedStubs = vectorOfMatches;
 
     // now convert out to a unique set
     // auto unique_out = make_unique_coll(mtkt, out, narbitrated);
@@ -412,7 +489,6 @@ std::vector<int> L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollecti
 
     // auto unique_out = out;
     // if (narbitrated) narbitrated->resize(unique_out.size(), 99);
-    
     return unique_out;
 }
 

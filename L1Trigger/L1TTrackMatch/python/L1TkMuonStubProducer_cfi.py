@@ -37,6 +37,7 @@ L1TkMuonStub = cms.EDProducer("L1TkMuonStubProducer",
     max_trk_chi2   = cms.double(100.0),
     min_trk_nstubs = cms.int32(4),
     require_BX0    = cms.bool(False),
+    require_PhaseII = cms.bool(False),
 
 )
 

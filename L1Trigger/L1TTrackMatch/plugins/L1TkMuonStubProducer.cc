@@ -82,6 +82,7 @@ private:
 
   std::unique_ptr<L1TkMuCorrDynamicWindows> dwcorr_;
   bool requireBX0_;
+  bool requirePhaseII_;
   int  mu_stub_station_;
 
   const edm::EDGetTokenT< EMTFTrackCollection >          emtfTCToken; // the track collection, directly from the EMTF and not formatted by GT
@@ -102,6 +103,7 @@ L1TkMuonStubProducer::L1TkMuonStubProducer(const edm::ParameterSet& iConfig) :
 
    mu_stub_station_ = iConfig.getParameter<int>("mu_stub_station");
    requireBX0_ = iConfig.getParameter<bool>("require_BX0");
+   requirePhaseII_ = iConfig.getParameter<bool>("require_PhaseII");
 
    if (emtfMatchAlgoVersionString == "dynamicwindows")
       emtfMatchAlgoVersion_ = kDynamicWindows;
@@ -197,7 +199,8 @@ L1TkMuonStubProducer::runOnMuonHitCollection(const edm::Handle<EMTFHitCollection
 {
   const EMTFHitCollection& l1muStubs = (*muonStubH.product());
   const L1TTTrackCollectionType& l1trks = (*l1tksH.product());
-  auto corr_muStub_idxs = dwcorr_->find_match_stub(l1muStubs, l1trks, mu_stub_station_, requireBX0_);
+  std::vector< std::vector<int> > matchedStubsPerTrack;
+  auto corr_muStub_idxs = dwcorr_->find_match_stub(l1muStubs, l1trks, matchedStubsPerTrack, mu_stub_station_, requireBX0_, requirePhaseII_);
   // it's a vector with as many entries as the L1TT vector.
   // >= 0 : the idx in the muStub vector of matched muStubs
   // < 0: no match
@@ -212,19 +215,47 @@ L1TkMuonStubProducer::runOnMuonHitCollection(const edm::Handle<EMTFHitCollection
     if (muStub_idx < 0)
       continue;
 
+    std::vector<int> tkMatchedStubs = matchedStubsPerTrack.at(il1ttrack);
+    cout << "      TkMuStub: i_Track = " << il1ttrack << " closest_matched_stub = " << muStub_idx << " , ( all matched stubs = ";
+    for (auto ssm = tkMatchedStubs.begin(); ssm != tkMatchedStubs.end(); ++ssm)
+      cout << *ssm << ' ';
+    cout << " ) " << endl;
+
     const L1TTTrackType& matchTk = l1trks[il1ttrack];
     const auto& p3 = matchTk.getMomentum(dwcorr_->get_n_trk_par());
     const auto& tkv3 = matchTk.getPOCA(dwcorr_->get_n_trk_par());
+    const auto& curve = matchTk.getRInv( dwcorr_->get_n_trk_par());
     float p4e = sqrt(0.105658369*0.105658369 + p3.mag2() );
     math::XYZTLorentzVector l1tkp4(p3.x(), p3.y(), p3.z(), p4e);
 
-    edm::Ref< RegionalMuonCandBxCollection > l1muRef; // FIXME! The reference to the muon is null 
     edm::Ptr< L1TTTrackType > l1tkPtr(l1tksH, il1ttrack);
-    float trkisol = -999; // FIXME: now doing as in the TP algo
-    L1TkMuonParticle l1tkmu(l1tkp4, l1muRef, l1tkPtr, trkisol);
-    l1tkmu.setTrkzVtx( (float)tkv3.z() );
     
-    tkMuons.push_back(l1tkmu);
+    float trkisol = -999; // FIXME: now doing as in the TP algo
+
+    edm::Ref< EMTFHitCollection > stubRef(muonStubH,muStub_idx);
+
+    L1TkMuonParticle l1tkmuStub(l1tkp4, stubRef, l1tkPtr, trkisol);
+
+    l1tkmuStub.setTrkzVtx( (float)tkv3.z() );
+    
+    // Set curvature
+    l1tkmuStub.setTrackCurvature(curve);
+    //Set charge
+    int charge =  (curve > 0) ? 1 : -1;
+    l1tkmuStub.setCharge(charge);
+
+    // add references to stubs from station 1 and 2 which are matched to this track 
+    for (auto ssm = tkMatchedStubs.begin(); ssm != tkMatchedStubs.end(); ++ssm) {
+
+      if(*ssm == -1) continue; 
+
+      edm::Ref< EMTFHitCollection > matchedStubRef(muonStubH,*ssm);
+      l1tkmuStub.addMuonStub(matchedStubRef);
+
+    }
+    
+    tkMuons.push_back(l1tkmuStub);
+
   }
 
 

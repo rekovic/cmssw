@@ -1,6 +1,6 @@
 <lcgdict>
-  <class name="l1t::MuonJet" ClassVersion="17">
-   <version ClassVersion="17" checksum="1372226808"/>
+  <class name="l1t::MuonJet" ClassVersion="25">
+   <version ClassVersion="25" checksum="234331647"/>
   </class>
   <class name="l1t::MuonJetCollection"/>
   <class name="edm::Wrapper<l1t::MuonJetCollection>"/>

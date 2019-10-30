@@ -5,6 +5,7 @@
 
 <use   name="CommonTools/Utils"/>
 <use   name="CommonTools/MVAUtils"/>
+<use   name="rootmath"/>
 <use   name="roottmva"/>
 <export>
   <lib name="1"/>

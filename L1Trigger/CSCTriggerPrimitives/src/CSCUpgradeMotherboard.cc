@@ -126,18 +126,18 @@ CSCUpgradeMotherboard::run(const CSCWireDigiCollection* wiredc,
 
   // ALCT centric matching
   for (int bx_alct = 0; bx_alct < CSCConstants::MAX_ALCT_TBINS; bx_alct++) {
-    if (alctProc->getBestALCT(bx_alct).isValid()) {
-      const int bx_clct_start(bx_alct - match_trig_window_size / 2 - alctClctOffset_);
-      const int bx_clct_stop(bx_alct + match_trig_window_size / 2 - alctClctOffset_);
+    if (alctProc->bestALCT[bx_alct].isValid()) {
+      const int bx_clct_start(bx_alct - match_trig_window_size/2 - alctClctOffset_);
+      const int bx_clct_stop(bx_alct + match_trig_window_size/2 - alctClctOffset_);
 
       if (debug_matching){
         LogTrace("CSCUpgradeMotherboard") << "========================================================================" << std::endl;
         LogTrace("CSCUpgradeMotherboard") << "ALCT-CLCT matching in ME34/1 chamber: " << cscId_ << std::endl;
         LogTrace("CSCUpgradeMotherboard") << "------------------------------------------------------------------------" << std::endl;
         LogTrace("CSCUpgradeMotherboard") << "+++ Best ALCT Details: ";
-        alctProc->getBestALCT(bx_alct).print();
+        alctProc->bestALCT[bx_alct].print();
         LogTrace("CSCUpgradeMotherboard") << "+++ Second ALCT Details: ";
-        alctProc->getSecondALCT(bx_alct).print();
+        alctProc->secondALCT[bx_alct].print();
 
         LogTrace("CSCUpgradeMotherboard") << "------------------------------------------------------------------------" << std::endl;
         LogTrace("CSCUpgradeMotherboard") << "Attempt ALCT-CLCT matching in ME34/13 in bx range: [" << bx_clct_start << "," << bx_clct_stop << "]" << std::endl;
@@ -145,30 +145,24 @@ CSCUpgradeMotherboard::run(const CSCWireDigiCollection* wiredc,
 
       // ALCT-to-CLCT
       for (int bx_clct = bx_clct_start; bx_clct <= bx_clct_stop; bx_clct++) {
-        if (bx_clct < 0 or bx_clct >= CSCConstants::MAX_CLCT_TBINS)
-          continue;
-        if (drop_used_clcts and used_clct_mask[bx_clct])
-          continue;
-        if (clctProc->getBestCLCT(bx_clct).isValid()) {
-          if (debug_matching)
-            LogTrace("CSCUpgradeMotherboard") << "++Valid ME21 CLCT: " << clctProc->getBestCLCT(bx_clct) << std::endl;
+        if (bx_clct < 0 or bx_clct >= CSCConstants::MAX_CLCT_TBINS) continue;
+        if (drop_used_clcts and used_clct_mask[bx_clct]) continue;
+        if (clctProc->bestCLCT[bx_clct].isValid()) {
+          if (debug_matching) LogTrace("CSCUpgradeMotherboard") << "++Valid ME21 CLCT: " << clctProc->bestCLCT[bx_clct] << std::endl;
 
-          int mbx = bx_clct - bx_clct_start;
-          CSCUpgradeMotherboard::correlateLCTs(alctProc->getBestALCT(bx_alct),
-                                               alctProc->getSecondALCT(bx_alct),
-                                               clctProc->getBestCLCT(bx_clct),
-                                               clctProc->getSecondCLCT(bx_clct),
-                                               allLCTs(bx_alct, mbx, 0),
-                                               allLCTs(bx_alct, mbx, 1));
+          int mbx = bx_clct-bx_clct_start;
+          CSCUpgradeMotherboard::correlateLCTs(alctProc->bestALCT[bx_alct], alctProc->secondALCT[bx_alct],
+                                               clctProc->bestCLCT[bx_clct], clctProc->secondCLCT[bx_clct],
+                                               allLCTs(bx_alct,mbx,0), allLCTs(bx_alct,mbx,1));
           if (infoV > 1)
             LogTrace("CSCUpgradeMotherboard") << "Successful ALCT-CLCT match in ME21: bx_alct = " << bx_alct
                                               << "; match window: [" << bx_clct_start << "; " << bx_clct_stop
                                               << "]; bx_clct = " << bx_clct << std::endl;
           LogTrace("CSCUpgradeMotherboard") << "+++ Best CLCT Details: ";
-          clctProc->getBestCLCT(bx_clct).print();
+          clctProc->bestCLCT[bx_clct].print();
           LogTrace("CSCUpgradeMotherboard") << "+++ Second CLCT Details: ";
-          clctProc->getSecondCLCT(bx_clct).print();
-          if (allLCTs(bx_alct, mbx, 0).isValid()) {
+          clctProc->secondCLCT[bx_clct].print();
+          if (allLCTs(bx_alct,mbx,0).isValid()) {
             used_clct_mask[bx_clct] += 1;
             if (match_earliest_clct_only) break;
           }

@@ -69,6 +69,8 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
+  int findStubRefIndex( const edm::Handle<EMTFHitCollection>&, const EMTFHit & ) const;
+
 private:
   virtual void produce(edm::Event&, const edm::EventSetup&);
 
@@ -76,6 +78,11 @@ private:
   void runOnMuonHitCollection(const edm::Handle<EMTFHitCollection>&,
                           const edm::Handle<L1TTTrackCollectionType>&,
                           L1TkMuonParticleCollection& tkMuons) const;
+
+
+  void cleanStubs(const EMTFHitCollection &, EMTFHitCollection &) const;
+  void printStubs(const EMTFHitCollection & , int) const;
+  void printStub(const EMTFHit & ) const;
 
   // int emtfMatchAlgoVersion_ ;         
   AlgoType emtfMatchAlgoVersion_ ;         
@@ -197,10 +204,21 @@ L1TkMuonStubProducer::runOnMuonHitCollection(const edm::Handle<EMTFHitCollection
                                      L1TkMuonParticleCollection& tkMuons) const
 
 {
+  // collection of stubs from the event
   const EMTFHitCollection& l1muStubs = (*muonStubH.product());
+
+  // collection for cleaned stubs
+  EMTFHitCollection cleanedStubs;
+
+  // reserve to size of original coolection
+  cleanedStubs.reserve(l1muStubs.size());
+  
+  // fill collection of cleaned stubs
+  cleanStubs(l1muStubs, cleanedStubs);
+  
   const L1TTTrackCollectionType& l1trks = (*l1tksH.product());
   std::vector< std::vector<int> > matchedStubsPerTrack;
-  auto corr_muStub_idxs = dwcorr_->find_match_stub(l1muStubs, l1trks, matchedStubsPerTrack, mu_stub_station_, requireBX0_, requirePhaseII_);
+  auto corr_muStub_idxs = dwcorr_->find_match_stub(cleanedStubs, l1trks, matchedStubsPerTrack, mu_stub_station_, requireBX0_, requirePhaseII_);
   // it's a vector with as many entries as the L1TT vector.
   // >= 0 : the idx in the muStub vector of matched muStubs
   // < 0: no match
@@ -232,7 +250,10 @@ L1TkMuonStubProducer::runOnMuonHitCollection(const edm::Handle<EMTFHitCollection
     
     float trkisol = -999; // FIXME: now doing as in the TP algo
 
-    edm::Ref< EMTFHitCollection > stubRef(muonStubH,muStub_idx);
+    const EMTFHit & muStub = cleanedStubs[muStub_idx];
+    int i_ref = findStubRefIndex(muonStubH, muStub);
+
+    edm::Ref< EMTFHitCollection > stubRef(muonStubH,i_ref);
 
     L1TkMuonParticle l1tkmuStub(l1tkp4, stubRef, l1tkPtr, trkisol);
 
@@ -249,7 +270,12 @@ L1TkMuonStubProducer::runOnMuonHitCollection(const edm::Handle<EMTFHitCollection
 
       if(*ssm == -1) continue; 
 
-      edm::Ref< EMTFHitCollection > matchedStubRef(muonStubH,*ssm);
+      // find index in the original list
+      const EMTFHit & muStub = cleanedStubs[*ssm];
+      int i_ref = findStubRefIndex(muonStubH, muStub);
+
+      // store refs
+      edm::Ref< EMTFHitCollection > matchedStubRef(muonStubH,i_ref);
       l1tkmuStub.addMuonStub(matchedStubRef);
 
     }
@@ -272,6 +298,119 @@ L1TkMuonStubProducer::fillDescriptions(edm::ConfigurationDescriptions& descripti
   desc.setUnknown();
   descriptions.addDefault(desc);
 }
+
+void 
+L1TkMuonStubProducer::cleanStubs(const EMTFHitCollection &  muStubs, EMTFHitCollection & cleanedStubs) const {
+
+    // if empty collection don't do anything
+    if(muStubs.size() == 0) return;
+    
+    // copy the first stub in the new collection
+    const EMTFHit & muStub = muStubs[0];
+    cleanedStubs.push_back(muStub);
+
+    for(uint ms = 0; ms < muStubs.size(); ms++) {
+
+      const EMTFHit & muStub = muStubs[ms];
+
+      int n_duplicate = 0;
+
+      for(uint i = 0; i <cleanedStubs.size(); i++) {
+
+        const EMTFHit & cStub = cleanedStubs[i];
+        int dSubsystem = cStub.Subsystem() - muStub.Subsystem();
+        int dStation = cStub.Station() - muStub.Station();
+        int dChamber = cStub.Chamber() - muStub.Chamber();
+        int dBend = cStub.Bend() - muStub.Bend();
+        float aDeltaPhi = abs(cStub.Phi_sim() * TMath::Pi()/180. - muStub.Phi_sim() * TMath::Pi()/180.);
+        //cout << "   aDeltaPhi = " << aDeltaPhi << endl;
+
+        // duplicate stubs defined as having same phi
+        if(aDeltaPhi < 0.0001 && dSubsystem == 0 && dStation == 0 && dChamber <= 1 && dBend == 0) {
+
+          n_duplicate++;
+
+        } // end if
+
+      } // end for cleaned
+
+      // did not find any duplicate stubs and the stub is not Neighbor
+      if(n_duplicate == 0 && muStub.Neighbor() == 0) {
+        cleanedStubs.push_back(muStub);
+      }
+
+    } // end for muStubs
+
+    /*
+    printf("----------------- Cleaned stubs ---------------------------------------------------- \n");
+    for(uint i = 0; i <cleanedStubs.size(); i++) {
+        const EMTFHit & cStub = cleanedStubs[i];
+        printStub(cStub);
+    }
+    printf("------------------------------------------------------------------------------- \n");
+    */
+
+}
+void 
+L1TkMuonStubProducer::printStubs(const EMTFHitCollection &  muStubs, int subsystem ) const {
+
+    int subsystem_ = subsystem;
+    int station_ = 1;
+    int ring_ = 1;
+    printf("----------------- stubs: subsystem = %1d  station = %1d   ring = %1d --------------- \n", subsystem_, station_, ring_ );
+    for(uint ms = 0; ms < muStubs.size(); ms++) {
+
+      const EMTFHit & muStub = muStubs[ms];
+      if(muStub.Subsystem() == subsystem_ && muStub.Station() == station_ && muStub.Ring() == ring_) {
+        printStub(muStub);
+      }
+    }
+
+    ring_ = 2;
+    printf("----------------- stubs: subsystem = %1d  station = %1d   ring = %1d --------------- \n", subsystem_, station_, ring_ );
+    for(uint ms = 0; ms < muStubs.size(); ms++) {
+
+      const EMTFHit & muStub = muStubs[ms];
+      if(muStub.Subsystem() == subsystem_ && muStub.Station() == station_ && muStub.Ring() == ring_) {
+        printStub(muStub);
+      }
+    }
+
+    printf("------------------------------------------------------------------------------- \n");
+
+}
+
+void 
+L1TkMuonStubProducer::printStub(const EMTFHit &  muStub ) const {
+
+        printf("stub subsystem = %1d, station = %1d,  ring = %1d, chamber = %1d, isNeighbor = %1d, quality = %1d, eta = %5.4f, phi = %5.4f, rho = %3.1f, bend = %3d, pattern = %3d, stubNum = %3d, BC0 = %1d, BX = %1d, valid = %1d \n", muStub.Subsystem(),  muStub.Station(), muStub.Ring(), muStub.Chamber(), muStub.Neighbor(), muStub.Quality(), muStub.Eta_sim(), muStub.Phi_sim() * TMath::Pi()/180.,  muStub.Rho_sim(), muStub.Bend(), muStub.Pattern(), muStub.Stub_num(), muStub.BC0(), muStub.BX(), muStub.Valid());
+
+}
+
+int
+L1TkMuonStubProducer::findStubRefIndex(const edm::Handle<EMTFHitCollection>& l1muonStubH, 
+                                          const EMTFHit & muStub) const
+{
+
+  // dumb function.  it would be much more elegant to save the cleaned collection.
+  int rc = -99;
+
+  const EMTFHitCollection& l1muStubs = (*l1muonStubH.product());
+
+  for(uint i = 0; i < l1muStubs.size(); i++) {
+
+    const EMTFHit & eventStub = l1muStubs[i]; 
+
+    if( eventStub.Eta_sim() == muStub.Eta_sim() &&
+        eventStub.Phi_sim() == muStub.Phi_sim() &&
+        eventStub.Rho_sim() == muStub.Rho_sim() ) return i;
+
+  }
+
+  return rc;
+
+}
+
 
 
 //define this as a plug-in

@@ -410,6 +410,64 @@ MuonJet::MuonJet(const EMTFHit & muStub_1, const EMTFHit & muStub_2, const EMTFH
 
 }
 
+MuonJet::MuonJet(const EMTFHitRef muStub_0, const EMTFHitRef muStub_1, const EMTFHitRef muStub_2) 
+{
+  
+  type_ = THREE_MUSTUB;
+  
+  muonType_  .push_back(k_MUSTUB);
+  muonType_  .push_back(k_MUSTUB);
+  muonType_  .push_back(k_MUSTUB);
+
+  pt_   .push_back(getPtFromBendingAngle(*muStub_0));
+  pt_   .push_back(getPtFromBendingAngle(*muStub_1));
+  pt_   .push_back(getPtFromBendingAngle(*muStub_2));
+
+  eta_  .push_back(muStub_0->Eta_sim());
+  eta_  .push_back(muStub_1->Eta_sim());
+  eta_  .push_back(muStub_2->Eta_sim());
+
+  phi_  .push_back(muStub_0->Phi_sim() * TMath::Pi()/180.);
+  phi_  .push_back(muStub_1->Phi_sim() * TMath::Pi()/180.);
+  phi_  .push_back(muStub_2->Phi_sim() * TMath::Pi()/180.);
+
+  stubEta_  .push_back(muStub_0->Eta_sim());
+  stubEta_  .push_back(muStub_1->Eta_sim());
+  stubEta_  .push_back(muStub_2->Eta_sim());
+
+  stubPhi_  .push_back(muStub_0->Phi_sim() * TMath::Pi()/180.);
+  stubPhi_  .push_back(muStub_1->Phi_sim() * TMath::Pi()/180.);
+  stubPhi_  .push_back(muStub_2->Phi_sim() * TMath::Pi()/180.);
+
+  stubBend_  .push_back(muStub_0->Bend());
+  stubBend_  .push_back(muStub_1->Bend());
+  stubBend_  .push_back(muStub_2->Bend());
+
+  stubRef_  .push_back(muStub_0);
+  stubRef_  .push_back(muStub_1);
+  stubRef_  .push_back(muStub_2);
+
+  EMTFHitRefVector singleRefVector_0(1,muStub_0);
+  stubRefs_  .push_back(singleRefVector_0);
+  EMTFHitRefVector singleRefVector_1(1,muStub_1);
+  stubRefs_  .push_back(singleRefVector_1);
+  EMTFHitRefVector singleRefVector_2(1,muStub_2);
+  stubRefs_  .push_back(singleRefVector_2);
+
+  zvtx_ .push_back(-99);
+  zvtx_ .push_back(-99);
+  zvtx_ .push_back(-99);
+
+  charge_ .push_back(getChargeFromBendingAngle(*muStub_0)); 
+  charge_ .push_back(getChargeFromBendingAngle(*muStub_1)); 
+  charge_ .push_back(getChargeFromBendingAngle(*muStub_2)); 
+
+  stubQual_  .push_back(muStub_0->Quality());
+  stubQual_  .push_back(muStub_1->Quality());
+  stubQual_  .push_back(muStub_2->Quality());
+
+}
+
 void MuonJet::configure(float const& maxDeltaEta, float const& maxDeltaPhi, float const& maxDeltaR, float const& maxDeltaZ) 
 {
 
@@ -432,33 +490,53 @@ void  MuonJet::process() {
   // /////////////////////////
   const float MU_MASS = 0.105658;
   math::PtEtaPhiMLorentzVectorF LV[3];
+  math::PtEtaPhiMLorentzVectorF LVAtVtx[3];
 
   for (int i=0; i<3; i++) 
   {
-    LV[i].SetCoordinates(pt_[i], eta_[i], phi_[i], MU_MASS);
+    LV[i].SetCoordinates(pt_[i], stubEta_[i], stubPhi_[i], MU_MASS);
+    LVAtVtx[i].SetCoordinates(pt_[i], eta_[i], phi_[i], MU_MASS);
   }
 
   std::vector<float> deltaR_v;
   deltaR_v.push_back(ROOT::Math::VectorUtil::DeltaR(LV[0],LV[1]));
   deltaR_v.push_back(ROOT::Math::VectorUtil::DeltaR(LV[0],LV[2]));
   deltaR_v.push_back(ROOT::Math::VectorUtil::DeltaR(LV[1],LV[2]));
+
+  std::vector<float> deltaEta_v;
+  deltaEta_v.push_back(abs(stubEta_[0] - stubEta_[1]));
+  deltaEta_v.push_back(abs(stubEta_[0] - stubEta_[2]));
+  deltaEta_v.push_back(abs(stubEta_[1] - stubEta_[2]));
+
+  std::vector<float> deltaPt_v;
+  deltaPt_v.push_back(abs(pt_[0] - pt_[1]));
+  deltaPt_v.push_back(abs(pt_[0] - pt_[2]));
+  deltaPt_v.push_back(abs(pt_[1] - pt_[2]));
+
+
+  std::vector<float> deltaPhi_v;
+  deltaPhi_v.push_back(ROOT::Math::VectorUtil::DeltaPhi(LV[0],LV[1]));
+  deltaPhi_v.push_back(ROOT::Math::VectorUtil::DeltaPhi(LV[0],LV[2]));
+  deltaPhi_v.push_back(ROOT::Math::VectorUtil::DeltaPhi(LV[1],LV[2]));
   
-  math::PtEtaPhiMLorentzVectorF LV3 = LV[0] + LV[1] + LV[2];
-
-  math::PtEtaPhiMLorentzVectorF LV01  = LV[0] + LV[1];
-
- // in case of TWO_TKMUSTUB_ONE_MUSTUB, 
- // use the two leggs of muonType_ k_TKMUSTUB
- // to be used for mass12 calculation
-  if(type_ == TWO_TKMUSTUB_ONE_MUSTUB) {
-
-    if(muonType_[0] == k_MUSTUB) LV01  = LV[1] + LV[2];
-    if(muonType_[1] == k_MUSTUB) LV01  = LV[0] + LV[2];
-    if(muonType_[2] == k_MUSTUB) LV01  = LV[0] + LV[1];
- 
- }
+  std::vector<float> deltaPhiAtVtx_v;
+  deltaPhiAtVtx_v.push_back(ROOT::Math::VectorUtil::DeltaPhi(LVAtVtx[0],LVAtVtx[1]));
+  deltaPhiAtVtx_v.push_back(ROOT::Math::VectorUtil::DeltaPhi(LVAtVtx[0],LVAtVtx[2]));
+  deltaPhiAtVtx_v.push_back(ROOT::Math::VectorUtil::DeltaPhi(LVAtVtx[1],LVAtVtx[2]));
+  
 
   deltaR_ = TMath::MaxElement(3,deltaR_v.data());
+  deltaEta_ = TMath::MaxElement(3,deltaEta_v.data());
+  deltaPhi_ = TMath::MaxElement(3,deltaPhi_v.data());
+  deltaPhiAtVtx_ = TMath::MaxElement(3,deltaPhiAtVtx_v.data());
+  deltaPt_ = TMath::MaxElement(3,deltaPt_v.data());
+
+  deltaRMin_ = TMath::MinElement(3,deltaR_v.data());
+  deltaEtaMin_ = TMath::MinElement(3,deltaEta_v.data());
+  deltaPhiMin_ = TMath::MinElement(3,deltaPhi_v.data());
+  deltaPhiAtVtxMin_ = TMath::MinElement(3,deltaPhiAtVtx_v.data());
+  deltaPtMin_ = TMath::MinElement(3,deltaPt_v.data());
+
 
   // in case of TWO_TKMUSTUB deltaR is the one betwen those two objects
   if(type_ == TWO_TKMUSTUB) deltaR_ = TMath::MaxElement(1,deltaR_v.data());
@@ -466,9 +544,22 @@ void  MuonJet::process() {
   // calculate mass
   //
   // /////////////////////////
-  mass_ = LV3.M();
+  math::PtEtaPhiMLorentzVectorF LVAtVtx3 = LVAtVtx[0] + LVAtVtx[1] + LVAtVtx[2];
+  math::PtEtaPhiMLorentzVectorF LVAtVtx01  = LVAtVtx[0] + LVAtVtx[1];
 
-  mass12_ = LV01.M();
+ // in case of TWO_TKMUSTUB_ONE_MUSTUB, 
+ // use the two leggs of muonType_ k_TKMUSTUB
+ // to be used for mass12 calculation
+  if(type_ == TWO_TKMUSTUB_ONE_MUSTUB) {
+
+    if(muonType_[0] == k_MUSTUB) LVAtVtx01  = LVAtVtx[1] + LVAtVtx[2];
+    if(muonType_[1] == k_MUSTUB) LVAtVtx01  = LVAtVtx[0] + LVAtVtx[2];
+    if(muonType_[2] == k_MUSTUB) LVAtVtx01  = LVAtVtx[0] + LVAtVtx[1];
+ 
+ }
+  mass_ = LVAtVtx3.M();
+
+  mass12_ = LVAtVtx01.M();
 
   // calculate total charge
   // 
@@ -511,21 +602,40 @@ bool MuonJet::isValid()
 
   bool rc = true;
 
-  if (deltaZ_ > maxDeltaZ_) return false;
-  if (deltaR_ > maxDeltaR_) return false;
-  if (abs(totalCharge_) > 1) return false;
+  //cout << "       deltaZ_ = " << deltaZ_ << "  maxDeltaZ_ " << maxDeltaZ_ << endl;
+  if (deltaZ_ > maxDeltaZ_) {
+    //cout << "    deltaZ out of range!" << endl;
+    return false;
+  }
+  if (deltaR_ > maxDeltaR_) {
+    //cout << "    deltaR out of range!" << endl;
+    return false;
+  }
+  if (abs(totalCharge_) > 1) {
+    //cout << "    Total charge out of range!" << endl;
+    return false;
+  }
 
   //  TkMuStub muste be 
   //  type 1 if eta (1.2 - 2.0)
   //  type 4 if eta (2.0 - 2.4)
-  if(! areValidStubs() ) return false;
+  if(! areValidStubs() ) {
+    //cout << "    areValidStubs is false!" << endl;
+    return false;
+  }
 
   // The principle stubs of TkMuStub object are unique, by construction of TkMuStub object
   // This is a sanity check;
-  if(type_ == THREE_TKMUSTUB && ! areUniqueTkMuStubs() ) return false;
+  if(type_ == THREE_TKMUSTUB && ! areUniqueTkMuStubs() ) {
+    //cout << "    areUnique TkMuStubs is false!" << endl;
+    return false;
+  }
 
   // Check that stub of MUSTUB type leg are not among stubs associated with another leg
-  if(type_ != THREE_TKMUSTUB && ! areUniqueStubs() ) return false;
+  if(type_ != THREE_TKMUSTUB && ! areUniqueStubs() ) {
+    //cout << "    areUnique MuStubs is false!" << endl;
+    return false;
+  }
 
 
   return rc;
@@ -539,7 +649,7 @@ bool MuonJet::areValidStubs()
   bool isValidMuon_1 = false;
   bool isValidMuon_2 = false;
 
-  cout << "areValidStubs():  muonType_[0] = " << muonType_[0] << " muonType_[1] = " << muonType_[1] << " muonType_[2] = " << muonType_[2] << endl;
+  //cout << "areValidStubs():  muonType_[0] = " << muonType_[0] << " muonType_[1] = " << muonType_[1] << " muonType_[2] = " << muonType_[2] << endl;
 
   if(muonType_[0] == k_TKMUSTUB) {
     if(isValidTkMuStub(stubRef_[0])) isValidMuon_0 = true;
@@ -571,7 +681,7 @@ bool MuonJet::areValidStubs()
     isValidMuon_2 = true;
   }
 
-  cout << "   Validation of muons (isValidMuon_0, isValidMuon_1, isValidMuon_2) = (" << isValidMuon_0 << "," << isValidMuon_1 << "," << isValidMuon_2 << ")" << endl;
+  //cout << "   Validation of muons (isValidMuon_0, isValidMuon_1, isValidMuon_2) = (" << isValidMuon_0 << "," << isValidMuon_1 << "," << isValidMuon_2 << ")" << endl;
   if(isValidMuon_0 && isValidMuon_1 && isValidMuon_2) rc = true;
 
   return rc;
@@ -587,7 +697,7 @@ bool MuonJet::isValidMuStub(const EMTFHitRef pStub)
   int stubStation = pStub->Station();
   int stubRing    = pStub->Ring();
 
-  cout << "Validation of stub: (eta, phi, type, station, ring = ( " << pStub->Eta_sim() << "," << pStub->Phi_sim() * TMath::Pi()/180.  << "," << stubType << "," << stubStation << "," << stubRing << ")" << endl;
+  //cout << "Validation of stub: (eta, phi, type, station, ring = ( " << pStub->Eta_sim() << "," << pStub->Phi_sim() * TMath::Pi()/180.  << "," << stubType << "," << stubStation << "," << stubRing << ")" << endl;
 
   // in eta (1.2 - 1.6) must be hit from ME1/2
   if(astubEta > 1.2 && astubEta < 1.6 && (stubStation != 1 || stubRing != 2 || stubType != EMTFHit::kCSC) ) rc = false;
@@ -595,6 +705,11 @@ bool MuonJet::isValidMuStub(const EMTFHitRef pStub)
   if(astubEta > 1.6 && astubEta < 2.0 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kCSC) ) rc = false;
   // in eta (2.0 - 2.8) must be hit from ME0
   if(astubEta > 2.0 && astubEta < 2.8 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kME0) ) rc = false;
+
+  // in eta (1.6 - 2.0) must be hit from ME1/1
+  //if(astubEta > 1.2 && astubEta < 2.4 && (stubStation != 1 || stubType != EMTFHit::kCSC) ) rc = false;
+  // in eta (2.0 - 2.8) must be hit from ME0
+  //if(astubEta > 2.4 && astubEta < 2.8 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kME0) ) rc = false;
 
   return rc;
 
@@ -667,7 +782,10 @@ bool const MuonJet::areUniqueStubs ()
 
         const EMTFHitRef j_muonAssociatedStub = *it;
 
-        if(i_muonMainStub == j_muonAssociatedStub) cout << "NOT UNIQUE STUBS !!!!!! " << endl;
+        if(i_muonMainStub == j_muonAssociatedStub) {
+          //cout << "NOT UNIQUE STUBS !!!!!! " << endl;
+          rc = false;
+        }
 
         float delta_eta = abs(i_muonMainStub->Eta_sim() - j_muonAssociatedStub->Eta_sim());
         float delta_phi = abs(i_muonMainStub->Phi_sim()* TMath::Pi()/180. - j_muonAssociatedStub->Phi_sim()* TMath::Pi()/180.);
@@ -676,8 +794,8 @@ bool const MuonJet::areUniqueStubs ()
           delta_chamber = abs( i_muonMainStub->Chamber() - i_muonMainStub->Chamber() );
 
         if (delta_eta < 0.02 && delta_phi < 0.02) {
-          if (delta_chamber == 0) cout << "NOT UNIQUE STUBS DUE TO DELTA RAYS !!!!!! " << endl;
-          if (delta_chamber == 1) cout << "NOT UNIQUE STUBS DUE TO OVERLAPS !!!!!! " << endl;
+          if (delta_chamber == 0) rc = false; //cout << "NOT UNIQUE STUBS DUE TO DELTA RAYS !!!!!! " << endl;
+          if (delta_chamber == 1) rc = false; //cout << "NOT UNIQUE STUBS DUE TO OVERLAPS !!!!!! " << endl;
         }
 
         /*
@@ -696,7 +814,7 @@ bool const MuonJet::areUniqueStubs ()
 
   } // end for i
 
-  cout << "areUniqueStubs(): rc == " << rc << endl;
+  //cout << "areUniqueStubs(): rc == " << rc << endl;
   return rc;
 
 }

@@ -283,7 +283,7 @@ std::vector<int> L1TkMuCorrDynamicWindows::find_match(const EMTFTrackCollection&
 std::vector< int > L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollection& l1mus, const L1TTTrackCollectionType& l1trks, std::vector<std::vector<int> > &  matchedStubs, const int& station, bool requireBX0, bool requirePhaseII)
 {
     // const int nTrkPars_ = 4; // FIXME: make confiugurable from python cfg
-    cout << "This is L1TkMuCorrDynamicWindows::find_match_stub() ......... " << endl;
+    //cout << "This is L1TkMuCorrDynamicWindows::find_match_stub() ......... " << endl;
 
     std::vector<int> out (l1trks.size());
 
@@ -440,7 +440,9 @@ std::vector< int > L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollec
 
             // identify and store the best DT, CSC, RPC, GEM, and ME0 matches
             // //////////////////////////////////////////////////////////////
-            cout << "Track index " << std::distance(l1trks.begin(), l1trkit) << endl;
+
+            //cout << "Track index " << std::distance(l1trks.begin(), l1trkit) << endl;
+
             // loop over all matched stubs to the track at hand
             for (auto m = matched.begin(); m != matched.end(); ++m) {
 
@@ -459,17 +461,20 @@ std::vector< int > L1TkMuCorrDynamicWindows::find_match_stub(const EMTFHitCollec
 	                  float hit_eta = muHit.Eta_sim();
 	                  float hit_phi = muHit.Phi_sim();
 	                  int hit_chamber = muHit.Chamber();
-	                  cout << "        matched: hit_index = " << hit_idx << " station = " << station << " subsystem = " << i_sub << " chamber = " << hit_chamber << " hit_eta = " << hit_eta << "  hit_phi = " << hit_phi << endl;
+
+	                  //cout << "        matched: hit_index = " << hit_idx << " station = " << station << " subsystem = " << i_sub << " chamber = " << hit_chamber << " hit_eta = " << hit_eta << "  hit_phi = " << hit_phi << endl;
 	                  subsystem_match.at((station-1)*5+i_sub) = hit_idx;
 	
 	                }
 
                 } // end for i_sub
 
+                /*
                 cout << "      status of matched (S1_DT, S1_CSC, S1_RPC, S1_GEM, S1_ME0, S2_DT, S2_CSC, S2_RPC, S2_GEM, S2_ME0)  = ";
                 for (auto ssm = subsystem_match.begin(); ssm != subsystem_match.end(); ++ssm)
                       cout << *ssm << ' ';
                 cout << endl;
+                */
 
             } // end for m iterator
 

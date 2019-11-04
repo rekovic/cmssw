@@ -56,6 +56,7 @@ namespace l1t {
       MuonJet(const L1TkMuonParticle &, const EMTFHit &, const EMTFHit &);
       MuonJet(const L1TkMuonParticle &, const EMTFHitRef, const EMTFHitRef);
       MuonJet(const EMTFHit &, const EMTFHit &, const EMTFHit &);
+      MuonJet(const EMTFHitRef, const EMTFHitRef,const EMTFHitRef);
 
       virtual ~MuonJet() {}
 
@@ -77,8 +78,21 @@ namespace l1t {
 
       float getMass()         const { return mass_; }
       float getMass12()       const { return mass12_; }
+
       float getDeltaR()       const { return deltaR_; }
+      float getDeltaEta()       const { return deltaEta_; }
+      float getDeltaPhi()       const { return deltaPhi_; }
+      float getDeltaPhiAtVtx()       const { return deltaPhiAtVtx_; }
+      float getDeltaPt()       const { return deltaPt_; }
       float getDeltaZ()       const { return deltaZ_; }
+
+      float getDeltaRMin()       const { return deltaRMin_; }
+      float getDeltaPtMin()       const { return deltaPtMin_; }
+      float getDeltaEtaMin()       const { return deltaEtaMin_; }
+      float getDeltaPhiMin()       const { return deltaPhiMin_; }
+      float getDeltaPhiAtVtxMin()       const { return deltaPhiAtVtxMin_; }
+      float getDeltaZMin()       const { return deltaZMin_; }
+
       int   getTotalCharge()    const { return totalCharge_; }
       MuonJetType getType()   const { return type_; }
       float getPtFromBendingAngle(const EMTFHit & muStub);
@@ -128,12 +142,21 @@ namespace l1t {
       float maxDeltaZ_;
       float maxDeltaM_;
 
-      float deltaPt_;
-      float deltaEta_;
-      float deltaPhi_;
-      float deltaR_;
-      float deltaZ_;
-      float deltaM_;
+      float deltaPt_;  // store max delta value
+      float deltaEta_;  // store max delta value
+      float deltaPhi_;  // store max delta value
+      float deltaPhiAtVtx_;  // store max delta value
+      float deltaR_;  // store max delta value
+      float deltaZ_;  // store max delta value
+      float deltaM_;  // store max delta value
+
+      float deltaPtMin_;  // store min delta value
+      float deltaEtaMin_;  // store min delta value
+      float deltaPhiMin_;  // store min delta value
+      float deltaPhiAtVtxMin_;  // store min delta value
+      float deltaRMin_;  // store min delta value
+      float deltaZMin_;  // store min delta value
+      float deltaMMin_;  // store min delta value
 
       float mass_;
       float mass12_;

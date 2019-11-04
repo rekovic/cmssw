@@ -83,6 +83,16 @@ L1TkMuonStubS12q90q99 = L1TkMuonStub.clone(
 
 )
 
+L1TkMuonStubS12q90q90 = L1TkMuonStub.clone(
+
+    mu_stub_station = cms.int32(12),
+    emtfcorr_S1_theta_windows  = cms.FileInPath('L1Trigger/L1TMuon/data/emtf_luts/matching_windows_station1_theta_q90.root'),
+    emtfcorr_S1_phi_windows    = cms.FileInPath('L1Trigger/L1TMuon/data/emtf_luts/matching_windows_station1_phi_q90.root'),
+    emtfcorr_theta_windows  = cms.FileInPath('L1Trigger/L1TMuon/data/emtf_luts/matching_windows_theta_q90.root'),
+    emtfcorr_phi_windows    = cms.FileInPath('L1Trigger/L1TMuon/data/emtf_luts/matching_windows_phi_q90.root'),
+
+)
+
 # Station = 1234, windows 90
 L1TkMuonStubS1234 = L1TkMuonStub.clone(
 

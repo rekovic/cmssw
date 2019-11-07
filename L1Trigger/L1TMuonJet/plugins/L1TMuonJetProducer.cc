@@ -56,7 +56,7 @@ class L1TMuonJetProducer : public edm::stream::EDProducer<> {
       ~L1TMuonJetProducer();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-      void findMuonJets(const edm::Handle<EMTFHitCollection>&, const edm::Handle<L1TkMuonParticleCollection>&, const edm::Handle<L1TkMuonParticleCollection>&, MuonJetCollection& ) const;
+      void findMuonJets(const edm::Handle<EMTFHitCollection>&, const edm::Handle<L1TkMuonParticleCollection>&, /*const edm::Handle<L1TkMuonParticleCollection>&,*/ MuonJetCollection& ) const;
       int findStubRefIndex( const edm::Handle<EMTFHitCollection>&, const EMTFHit & ) const;
       bool isAllowedMuonStub(const EMTFHit & ) const;
       void cleanStubs(const EMTFHitCollection &, EMTFHitCollection &) const;
@@ -184,9 +184,9 @@ L1TMuonJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<EMTFHitCollection> muonStubCH;
   iEvent.getByToken(muonStubCToken, muonStubCH);
 
-  // the L1TkMu stubs
-  edm::Handle<L1TkMuonParticleCollection> tkmuCH;
-  iEvent.getByToken(muonStubCToken, tkmuCH);
+  // the L1TkMu objects
+  //edm::Handle<L1TkMuonParticleCollection> tkmuCH;
+  //iEvent.getByToken(muonStubCToken, tkmuCH);
 
   // the L1TkMuStub objects
   edm::Handle<L1TkMuonParticleCollection> tkmuStubCH;
@@ -202,7 +202,7 @@ L1TMuonJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   MuonJetCollection muonjets;
 
-  findMuonJets(muonStubCH, tkmuStubCH, tkmuCH, muonjets);
+  findMuonJets(muonStubCH, tkmuStubCH, muonjets);
   
 
   auto out_3TkMuStub_muonjets          = std::make_unique<MuonJetCollection>(); 
@@ -455,12 +455,12 @@ L1TMuonJetProducer::findStubRefIndex(const edm::Handle<EMTFHitCollection>& l1muo
 
 void
 L1TMuonJetProducer::findMuonJets(const edm::Handle<EMTFHitCollection>& l1muonStubH,
-                                     const edm::Handle<L1TkMuonParticleCollection>& l1tkmuonH,
                                      const edm::Handle<L1TkMuonParticleCollection>& l1tkmuonStubH,
+                                     //const edm::Handle<L1TkMuonParticleCollection>& l1tkmuonH,
                                      MuonJetCollection& out_muonJets) const
 {
   const EMTFHitCollection& l1muStubs = (*l1muonStubH.product());
-  const L1TkMuonParticleCollection& l1tkmu = (*l1tkmuonH.product());
+  //const L1TkMuonParticleCollection& l1tkmu = (*l1tkmuonH.product());
   const L1TkMuonParticleCollection& l1tkmuStubs = (*l1tkmuonStubH.product());
 
 
@@ -565,6 +565,27 @@ L1TMuonJetProducer::findMuonJets(const edm::Handle<EMTFHitCollection>& l1muonStu
         } // end if valid
         
       } // end for k_tkms
+
+      // 3rd loop - loop over TkMu
+      /*
+      for (uint k_tkm = 0; k_tkm < l1tkmu.size(); k_tkm++) {
+
+        MuonJet muonJet_2tms_1tm(l1tkmuStubs[i_tkms],l1tkmuStubs[j_tkms],l1tkmu[k_tkm],3);
+        muonJet_2tms_1tm.configure(max_dR_3_TKMUSTUB_, max_dR_3_TKMUSTUB_, max_dR_3_TKMUSTUB_, max_dZ_3_TKMUSTUB_);
+        muonJet_2tms_1tm.process();
+
+        // check if withn  max_dz, max_dR
+        if (muonJet_2tms_1tm.isValid()) 
+        {
+
+          if(debug_) cout << " pushing THREE_TKMUSTUB" << endl;
+          //out_muonJets.push_back(muonJet_2tms_1tm);
+          //if(debug_) muonJet_2tms_1tm.print();
+          
+        } // end if valid
+        
+      } // end for k_tkm
+      */
 
         const L1TkMuonParticle& tkmuStub1 = l1tkmuStubs[i_tkms]; 
         const L1TkMuonParticle& tkmuStub2 = l1tkmuStubs[j_tkms]; 

@@ -616,11 +616,8 @@ bool MuonJet::isValid()
     return false;
   }
 
-  //  TkMuStub muste be 
-  //  type 1 if eta (1.2 - 2.0)
-  //  type 4 if eta (2.0 - 2.4)
-  if(! areValidStubs() ) {
-    //cout << "    areValidStubs is false!" << endl;
+  if(! areValidLegs() ) {
+    //cout << "    areValidLegs is false!" << endl;
     return false;
   }
 
@@ -641,48 +638,27 @@ bool MuonJet::isValid()
   return rc;
 }
 
-bool MuonJet::areValidStubs()
+bool MuonJet::areValidLegs()
 {
 
   bool rc = false;
-  bool isValidMuon_0 = false;
-  bool isValidMuon_1 = false;
-  bool isValidMuon_2 = false;
 
-  //cout << "areValidStubs():  muonType_[0] = " << muonType_[0] << " muonType_[1] = " << muonType_[1] << " muonType_[2] = " << muonType_[2] << endl;
+  if (isValidLeg(0) && isValidLeg(1) && isValidLeg(2)) rc = true;
 
-  if(muonType_[0] == k_TKMUSTUB) {
-    if(isValidTkMuStub(stubRef_[0])) isValidMuon_0 = true;
-  }
-  else if(muonType_[0] == k_MUSTUB) {
-    if(isValidMuStub(stubRef_[0])) isValidMuon_0 = true;
-  }
-  else {
-    isValidMuon_0 = false;
-  }
+  return rc;
 
-  if(muonType_[1] == k_TKMUSTUB) {
-    if(isValidTkMuStub(stubRef_[1])) isValidMuon_1 = true;
-  }
-  else if(muonType_[1] == k_MUSTUB) {
-    if(isValidMuStub(stubRef_[1])) isValidMuon_1 = true;
-  }
-  else {
-    isValidMuon_1 = false;
-  }
+}
 
-  if(muonType_[2] == k_TKMUSTUB) {
-    if(isValidTkMuStub(stubRef_[2])) isValidMuon_2 = true;
-  }
-  else if(muonType_[2] == k_MUSTUB) {
-    if(isValidMuStub(stubRef_[2])) isValidMuon_2 = true;
-  }
-  else {
-    isValidMuon_2 = true;
-  }
+bool MuonJet::isValidLeg(int i) {
 
-  //cout << "   Validation of muons (isValidMuon_0, isValidMuon_1, isValidMuon_2) = (" << isValidMuon_0 << "," << isValidMuon_1 << "," << isValidMuon_2 << ")" << endl;
-  if(isValidMuon_0 && isValidMuon_1 && isValidMuon_2) rc = true;
+  bool rc = false;
+
+  if(muonType_[i] == k_TKMUSTUB) {
+    if(isValidTkMuStub(i)) rc = true;
+  }
+  else if(muonType_[i] == k_MUSTUB) {
+    if(isValidMuStub(stubRef_[i])) rc = true;
+  }
 
   return rc;
 
@@ -699,12 +675,19 @@ bool MuonJet::isValidMuStub(const EMTFHitRef pStub)
 
   //cout << "Validation of stub: (eta, phi, type, station, ring = ( " << pStub->Eta_sim() << "," << pStub->Phi_sim() * TMath::Pi()/180.  << "," << stubType << "," << stubStation << "," << stubRing << ")" << endl;
 
+  //// in eta (1.2 - 1.6) must be hit from ME1/2
+  //if(astubEta > 1.2 && astubEta < 1.6 && (stubStation != 1 || stubRing != 2 || stubType != EMTFHit::kCSC) ) rc = false;
+  //// in eta (1.6 - 2.0) must be hit from ME1/1
+  //if(astubEta > 1.6 && astubEta < 2.0 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kCSC) ) rc = false;
+  //// in eta (2.0 - 2.8) must be hit from ME0
+  //if(astubEta > 2.0 && astubEta < 2.8 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kME0) ) rc = false;
+
   // in eta (1.2 - 1.6) must be hit from ME1/2
   if(astubEta > 1.2 && astubEta < 1.6 && (stubStation != 1 || stubRing != 2 || stubType != EMTFHit::kCSC) ) rc = false;
-  // in eta (1.6 - 2.0) must be hit from ME1/1
-  if(astubEta > 1.6 && astubEta < 2.0 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kCSC) ) rc = false;
+  // in eta (1.6 - 2.0) must be hit from ME1/1 (i.e.n rings 1 and 4)
+  if(astubEta > 1.6 && astubEta < 2.4 && (stubStation != 1 || (stubRing != 1 && stubRing != 4) || stubType != EMTFHit::kCSC) ) rc = false;
   // in eta (2.0 - 2.8) must be hit from ME0
-  if(astubEta > 2.0 && astubEta < 2.8 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kME0) ) rc = false;
+  if(astubEta > 2.4 && astubEta < 2.8 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kME0) ) rc = false;
 
   // in eta (1.6 - 2.0) must be hit from ME1/1
   //if(astubEta > 1.2 && astubEta < 2.4 && (stubStation != 1 || stubType != EMTFHit::kCSC) ) rc = false;
@@ -715,17 +698,22 @@ bool MuonJet::isValidMuStub(const EMTFHitRef pStub)
 
 }
 
-bool MuonJet::isValidTkMuStub(const EMTFHitRef pStub)
+bool MuonJet::isValidTkMuStub(int i)
 {
+
 
   bool rc = true;
 
-  //float astubEta  = abs(pStub->Eta_sim());
-  //int stubType    = pStub->Subsystem();
+  //If matched to a CSC stub station 1, it can be only upto eta=2.4
+  for (auto pStub : stubRefs_[i]) { 
 
-  //if(astubEta > 1.2 && astubEta < 2.0 && stubType != EMTFHit::kCSC && stubType != EMTFHit::kRPC) rc = false;
-  //if(astubEta > 2.0 && astubEta < 2.8 && stubType == EMTFHit::kME0) rc = true;
+    float astubEta      = abs(pStub->Eta_sim());
+    int stubType        = pStub->Subsystem();
+    int stubStation     = pStub->Station();
+
+    if(stubStation == 1 && stubType == EMTFHit::kCSC && astubEta > 2.4 ) rc = false;
   
+  }
 
   return rc;
 

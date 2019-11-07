@@ -104,8 +104,9 @@ namespace l1t {
       void process();
       void sortWithPt();
       bool isValid();
-      bool areValidStubs();
-      bool isValidTkMuStub(const EMTFHitRef);
+      bool areValidLegs();
+      bool isValidLeg(int);
+      bool isValidTkMuStub(int);
       bool isValidMuStub(const EMTFHitRef);
       bool const areUniqueStubs ();
       bool const areUniqueTkMuStubs ();

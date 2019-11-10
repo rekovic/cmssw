@@ -79,6 +79,7 @@ private:
                           const edm::Handle<L1TTTrackCollectionType>&,
                           L1TkMuonParticleCollection& tkMuons) const;
 
+  void getExtendedEtaME0Muons(const edm::Handle<EMTFHitCollection>& , L1TkMuonParticleCollection&, EMTFHitCollection & ) const;
 
   void cleanStubs(const EMTFHitCollection &, EMTFHitCollection &) const;
   void printStubs(const EMTFHitCollection & , int) const;
@@ -119,6 +120,8 @@ L1TkMuonStubProducer::L1TkMuonStubProducer(const edm::ParameterSet& iConfig) :
    
 
    produces<L1TkMuonParticleCollection>();
+   produces<L1TkMuonParticleCollection>("ME0Ext");
+   produces<EMTFHitCollection>("Cleaned");
 
    // initializations
    if (emtfMatchAlgoVersion_ == kDynamicWindows)
@@ -179,7 +182,9 @@ L1TkMuonStubProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<L1TTTrackCollectionType> l1tksH;
   iEvent.getByToken(trackToken, l1tksH);
 
-  L1TkMuonParticleCollection oc_endcap_tkmuonStub;
+  L1TkMuonParticleCollection  oc_endcap_tkmuonStub;
+  L1TkMuonParticleCollection  oc_me0Extended_tkmuonStub;
+  EMTFHitCollection           oc_cleanedStub;
 
   // process each of the MTF collections separately! -- we don't want to filter the muons
   //if (emtfMatchAlgoVersion_ == kDynamicWindows) 
@@ -193,8 +198,27 @@ L1TkMuonStubProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     oc_tkmuon->insert(oc_tkmuon->end(), p.begin(), p.end());
   }
 
+   getExtendedEtaME0Muons(l1emtfHCH,oc_me0Extended_tkmuonStub, oc_cleanedStub);
+
+  // now combine all trk muons into a single output collection!
+  std::unique_ptr<L1TkMuonParticleCollection> oc_me0Ext(new L1TkMuonParticleCollection());
+  for (const auto& p : {oc_me0Extended_tkmuonStub}){
+    oc_me0Ext->insert(oc_me0Ext->end(), p.begin(), p.end());
+  }
+
+  // now put cleaned stubs in a output collection!
+  std::unique_ptr<EMTFHitCollection> oc_stub(new EMTFHitCollection());
+  for (const auto& p : {oc_cleanedStub}){
+    oc_stub->insert(oc_stub->end(), p.begin(), p.end());
+  }
+
+   
   // put the new track+muon objects in the event!
   iEvent.put( std::move(oc_tkmuon));
+  // put the new me0  objects in the event!
+  iEvent.put( std::move(oc_me0Ext),"ME0Ext");
+  // put the clean stubs in the event!
+  iEvent.put( std::move(oc_stub),"Cleaned");
 };
 
 
@@ -309,7 +333,7 @@ L1TkMuonStubProducer::cleanStubs(const EMTFHitCollection &  muStubs, EMTFHitColl
     const EMTFHit & muStub = muStubs[0];
     cleanedStubs.push_back(muStub);
 
-    for(uint ms = 0; ms < muStubs.size(); ms++) {
+    for(uint ms = 1; ms < muStubs.size(); ms++) {
 
       const EMTFHit & muStub = muStubs[ms];
 
@@ -328,6 +352,10 @@ L1TkMuonStubProducer::cleanStubs(const EMTFHitCollection &  muStubs, EMTFHitColl
         // duplicate stubs defined as having same phi
         if(aDeltaPhi < 0.0001 && dSubsystem == 0 && dStation == 0 && dChamber <= 1 && dBend == 0) {
 
+          //cout << "Found duplicates: " 
+            //<< " (eta1,phi1) = (" << cStub.Eta_sim() << "," << cStub.Phi_sim() << ")" 
+            //<< " (eta2,phi2) = (" << muStub.Eta_sim() << "," << muStub.Phi_sim() << ")" 
+            //<< endl;
           n_duplicate++;
 
         } // end if
@@ -383,7 +411,7 @@ L1TkMuonStubProducer::printStubs(const EMTFHitCollection &  muStubs, int subsyst
 void 
 L1TkMuonStubProducer::printStub(const EMTFHit &  muStub ) const {
 
-        printf("stub subsystem = %1d, station = %1d,  ring = %1d, chamber = %1d, isNeighbor = %1d, quality = %1d, eta = %5.4f, phi = %5.4f, rho = %3.1f, bend = %3d, pattern = %3d, stubNum = %3d, BC0 = %1d, BX = %1d, valid = %1d \n", muStub.Subsystem(),  muStub.Station(), muStub.Ring(), muStub.Chamber(), muStub.Neighbor(), muStub.Quality(), muStub.Eta_sim(), muStub.Phi_sim() * TMath::Pi()/180.,  muStub.Rho_sim(), muStub.Bend(), muStub.Pattern(), muStub.Stub_num(), muStub.BC0(), muStub.BX(), muStub.Valid());
+        printf("stub subsystem = %1d, station = %1d,  ring = %1d, chamber = %1d, strip = %1d, isNeighbor = %1d, quality = %1d, eta = %5.4f, phi = %5.4f, rho = %3.1f, bend = %3d, pattern = %3d, stubNum = %3d, BC0 = %1d, BX = %1d, valid = %1d \n", muStub.Subsystem(),  muStub.Station(), muStub.Ring(), muStub.Chamber(), muStub.Strip(), muStub.Neighbor(), muStub.Quality(), muStub.Eta_sim(), muStub.Phi_sim() * TMath::Pi()/180.,  muStub.Rho_sim(), muStub.Bend(), muStub.Pattern(), muStub.Stub_num(), muStub.BC0(), muStub.BX(), muStub.Valid());
 
 }
 
@@ -411,6 +439,62 @@ L1TkMuonStubProducer::findStubRefIndex(const edm::Handle<EMTFHitCollection>& l1m
 
 }
 
+void
+L1TkMuonStubProducer::getExtendedEtaME0Muons(const edm::Handle<EMTFHitCollection>& muonStubH, L1TkMuonParticleCollection& tkMuons, EMTFHitCollection & cleanedStubs) const
+
+{
+  const EMTFHitCollection& l1muStubs = (*muonStubH.product());
+
+  // collection for cleaned stubs
+  //EMTFHitCollection cleanedStubs;
+
+  // reserve to size of original coolection
+  cleanedStubs.reserve(l1muStubs.size());
+
+  // fill collection of cleaned stubs
+  cleanStubs(l1muStubs, cleanedStubs);
+
+  //cout << "Numbe of cleaned stubs = " << cleanedStubs.size() << endl;
+
+  for (auto muStub : cleanedStubs) {
+
+
+    if(muStub.Subsystem() != EMTFHit::kME0) continue;
+
+    
+    float stubBend = muStub.Bend();
+    stubBend *= 3.63/1000.; // in rad
+    float pt = 0.25 * 1.0 / abs(stubBend); // in GeV
+
+    float eta = muStub.Eta_sim();
+    float phi = muStub.Phi_sim() * TMath::Pi()/180.;
+
+    //cout << " Checkign the eta" << endl;
+    if(abs(eta) < 2.4) continue;
+
+    //cout << "Checking stub for pt = " << pt  << endl;
+    if(pt < 5.0) continue;
+    
+    reco::Candidate::PolarLorentzVector muonLV(pt,eta,phi,0);
+    L1TkMuonParticle muon(muonLV);
+
+    int charge = 1;
+    if(stubBend > 0) charge = -1;
+
+    int quality = muStub.Quality();
+
+    
+    muon.setCharge(charge);
+    muon.setQuality(quality);
+
+    //cout << "Storing ME0Ext saving pt = " << pt << endl;
+    // build a L1Candidate
+    tkMuons.push_back( muon);
+
+  }
+
+  return;
+}
 
 
 //define this as a plug-in

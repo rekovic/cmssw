@@ -918,6 +918,13 @@ float MuonJet::getPtFromBendingAngle(const EMTFHit & muStub) {
     stubBend *= stripSize*32.0/4.0/1000.; // in rad
     stubPt = 1.0 / stubBend; // in GeV
 
+    if(muStub.Station()== 1) {
+      if( muStub.Ring() == 4) stubPt = 0.5 +  31./(stubBend-1.7); // ME1/4 - eta 2.0-2.4
+      if( muStub.Ring() == 1) stubPt = 0.5 +  10.7/(stubBend-3.2); // ME1/1 - eta 1.5-2.0
+      if( muStub.Ring() == 2) stubPt = 0.5 +  50 /(stubBend-0.76); // ME1/2 - eta 1.2-1.5
+      //if( muStub.Ring() == 3) stubPt =  // ME1/3 - ????
+    }
+
   } // end if CSC
 
   return abs(stubPt);

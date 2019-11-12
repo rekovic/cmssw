@@ -267,8 +267,10 @@ MuonJet::MuonJet(const L1TkMuonParticle & tkMuStub_1, const EMTFHit & muStub_1, 
   eta_  .push_back(muStub_2.Eta_sim());
 
   phi_  .push_back(tkMuStub_1.phi());
-  phi_  .push_back(muStub_1.Phi_sim() * TMath::Pi()/180.);
-  phi_  .push_back(muStub_2.Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_1.Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_2.Phi_sim() * TMath::Pi()/180.);
+  phi_  .push_back(getPhiAtVertex(muStub_1));
+  phi_  .push_back(getPhiAtVertex(muStub_2));
 
   stubEta_  .push_back(tkMuStub_1.getMuStubRef()->Eta_sim());
   stubEta_  .push_back(muStub_1.Eta_sim());
@@ -320,8 +322,10 @@ MuonJet::MuonJet(const L1TkMuonParticle & tkMuStub_1, const EMTFHitRef muStub_1,
   eta_  .push_back(muStub_2->Eta_sim());
 
   phi_  .push_back(tkMuStub_1.phi());
-  phi_  .push_back(muStub_1->Phi_sim() * TMath::Pi()/180.);
-  phi_  .push_back(muStub_2->Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_1->Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_2->Phi_sim() * TMath::Pi()/180.);
+  phi_  .push_back(getPhiAtVertex(*muStub_1));
+  phi_  .push_back(getPhiAtVertex(*muStub_2));
 
   stubEta_  .push_back(tkMuStub_1.getMuStubRef()->Eta_sim());
   stubEta_  .push_back(muStub_1->Eta_sim());
@@ -376,9 +380,12 @@ MuonJet::MuonJet(const EMTFHit & muStub_1, const EMTFHit & muStub_2, const EMTFH
   eta_  .push_back(muStub_2.Eta_sim());
   eta_  .push_back(muStub_3.Eta_sim());
 
-  phi_  .push_back(muStub_1.Phi_sim() * TMath::Pi()/180.);
-  phi_  .push_back(muStub_2.Phi_sim() * TMath::Pi()/180.);
-  phi_  .push_back(muStub_3.Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_1.Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_2.Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_3.Phi_sim() * TMath::Pi()/180.);
+  phi_  .push_back(getPhiAtVertex(muStub_1));
+  phi_  .push_back(getPhiAtVertex(muStub_2));
+  phi_  .push_back(getPhiAtVertex(muStub_3));
 
   stubEta_  .push_back(muStub_1.Eta_sim());
   stubEta_  .push_back(muStub_2.Eta_sim());
@@ -427,9 +434,12 @@ MuonJet::MuonJet(const EMTFHitRef muStub_0, const EMTFHitRef muStub_1, const EMT
   eta_  .push_back(muStub_1->Eta_sim());
   eta_  .push_back(muStub_2->Eta_sim());
 
-  phi_  .push_back(muStub_0->Phi_sim() * TMath::Pi()/180.);
-  phi_  .push_back(muStub_1->Phi_sim() * TMath::Pi()/180.);
-  phi_  .push_back(muStub_2->Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_0->Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_1->Phi_sim() * TMath::Pi()/180.);
+  //phi_  .push_back(muStub_2->Phi_sim() * TMath::Pi()/180.);
+  phi_  .push_back(getPhiAtVertex(*muStub_0));
+  phi_  .push_back(getPhiAtVertex(*muStub_1));
+  phi_  .push_back(getPhiAtVertex(*muStub_2));
 
   stubEta_  .push_back(muStub_0->Eta_sim());
   stubEta_  .push_back(muStub_1->Eta_sim());
@@ -545,11 +555,14 @@ void  MuonJet::process() {
   //
   // /////////////////////////
   math::PtEtaPhiMLorentzVectorF LVAtVtx3 = LVAtVtx[0] + LVAtVtx[1] + LVAtVtx[2];
+  mass_ = LVAtVtx3.M();
+
+  // calculate mass12 - mass of two leading pt legs
+  //
+  // /////////////////////////
   math::PtEtaPhiMLorentzVectorF LVAtVtx01  = LVAtVtx[0] + LVAtVtx[1];
 
- // in case of TWO_TKMUSTUB_ONE_MUSTUB, 
- // use the two leggs of muonType_ k_TKMUSTUB
- // to be used for mass12 calculation
+ // for TWO_TKMUSTUB_ONE_MUSTUB, use the two track-matched leggs (muonType_ k_TKMUSTUB)
   if(type_ == TWO_TKMUSTUB_ONE_MUSTUB) {
 
     if(muonType_[0] == k_MUSTUB) LVAtVtx01  = LVAtVtx[1] + LVAtVtx[2];
@@ -557,7 +570,6 @@ void  MuonJet::process() {
     if(muonType_[2] == k_MUSTUB) LVAtVtx01  = LVAtVtx[0] + LVAtVtx[1];
  
  }
-  mass_ = LVAtVtx3.M();
 
   mass12_ = LVAtVtx01.M();
 
@@ -604,33 +616,34 @@ bool MuonJet::isValid()
 
   //cout << "       deltaZ_ = " << deltaZ_ << "  maxDeltaZ_ " << maxDeltaZ_ << endl;
   if (deltaZ_ > maxDeltaZ_) {
-    //cout << "    deltaZ out of range!" << endl;
+    cout << "    deltaZ out of range!" << endl;
     return false;
   }
   if (deltaR_ > maxDeltaR_) {
-    //cout << "    deltaR out of range!" << endl;
+    cout << "    deltaR out of range!" << endl;
     return false;
   }
   if (abs(totalCharge_) > 1) {
-    //cout << "    Total charge out of range!" << endl;
+    cout << "    Total charge out of range!" << endl;
     return false;
   }
 
-  if(! areValidLegs() ) {
-    //cout << "    areValidLegs is false!" << endl;
-    return false;
+  for (int i = 0 ; i<3 ; i++) {
+    if(! isValidLeg(i) ) {
+      cout << "    isValidLeg " << i << " is false!" << endl;
+      return false;
+    }
   }
 
-  // The principle stubs of TkMuStub object are unique, by construction of TkMuStub object
-  // This is a sanity check;
+  // Sanity check: the principle stubs of TkMuStub object are unique, by construction of TkMuStub object
   if(type_ == THREE_TKMUSTUB && ! areUniqueTkMuStubs() ) {
-    //cout << "    areUnique TkMuStubs is false!" << endl;
+    cout << "    areUnique TkMuStubs is false!" << endl;
     return false;
   }
 
   // Check that stub of MUSTUB type leg are not among stubs associated with another leg
   if(type_ != THREE_TKMUSTUB && ! areUniqueStubs() ) {
-    //cout << "    areUnique MuStubs is false!" << endl;
+    cout << "    areUnique MuStubs is false!" << endl;
     return false;
   }
 
@@ -667,7 +680,7 @@ bool MuonJet::isValidLeg(int i) {
 bool MuonJet::isValidMuStub(const EMTFHitRef pStub)
 {
 
-  bool rc = true;
+  bool rc = false;
   float astubEta  = abs(pStub->Eta_sim());
   int stubType    = pStub->Subsystem();
   int stubStation = pStub->Station();
@@ -683,11 +696,14 @@ bool MuonJet::isValidMuStub(const EMTFHitRef pStub)
   //if(astubEta > 2.0 && astubEta < 2.8 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kME0) ) rc = false;
 
   // in eta (1.2 - 1.6) must be hit from ME1/2
-  if(astubEta > 1.2 && astubEta < 1.6 && (stubStation != 1 || stubRing != 2 || stubType != EMTFHit::kCSC) ) rc = false;
+  //if(astubEta > 1.2 && astubEta < 1.6 && (stubStation != 1 || stubRing != 2 || stubType != EMTFHit::kCSC) ) rc = false;
+  if(astubEta > 1.2 && astubEta < 1.5 && stubStation == 1 && stubRing == 2 && stubType == EMTFHit::kCSC ) rc = true;
   // in eta (1.6 - 2.0) must be hit from ME1/1 (i.e.n rings 1 and 4)
-  if(astubEta > 1.6 && astubEta < 2.4 && (stubStation != 1 || (stubRing != 1 && stubRing != 4) || stubType != EMTFHit::kCSC) ) rc = false;
+  //if(astubEta > 1.6 && astubEta < 2.4 && (stubStation != 1 || (stubRing != 1 && stubRing != 4) || stubType != EMTFHit::kCSC) ) rc = false;
+  if(astubEta > 1.5 && astubEta < 2.4 && stubStation == 1 && (stubRing == 1 || stubRing == 4) &&  stubType == EMTFHit::kCSC)  rc = true;
   // in eta (2.0 - 2.8) must be hit from ME0
-  if(astubEta > 2.4 && astubEta < 2.8 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kME0) ) rc = false;
+  //if(astubEta > 2.4 && astubEta < 2.8 && (stubStation != 1 || stubRing != 1 || stubType != EMTFHit::kME0) ) rc = false;
+  if(astubEta > 2.4 && astubEta < 2.8 && stubStation == 1 && stubRing == 1 && stubType == EMTFHit::kME0)  rc = true;
 
   // in eta (1.6 - 2.0) must be hit from ME1/1
   //if(astubEta > 1.2 && astubEta < 2.4 && (stubStation != 1 || stubType != EMTFHit::kCSC) ) rc = false;
@@ -732,7 +748,10 @@ bool const MuonJet::areUniqueTkMuStubs ()
   if (abs(stubPhi_[0] - stubPhi_[2]) == 0) rc = false;
   if (abs(stubPhi_[1] - stubPhi_[2]) == 0) rc = false;
 
-  if(rc == false) edm::LogWarning("MuonJet::areUniqueTkMuStubs") << "WARNING: Not passing sanity check: principle stubs of TkMuStub object within MuonJet are not unique. " << endl;
+  if(rc == false) {
+    edm::LogWarning("MuonJet::areUniqueTkMuStubs") << "WARNING: Not passing sanity check: principle stubs of TkMuStub object within MuonJet are not unique. " << endl;
+    cout << "MuonJet::areUniqueTkMuStubs.     WARNING: Not passing sanity check: principle stubs of TkMuStub object within MuonJet are not unique. " << endl;
+  }
   return rc;
 
 }
@@ -771,7 +790,7 @@ bool const MuonJet::areUniqueStubs ()
         const EMTFHitRef j_muonAssociatedStub = *it;
 
         if(i_muonMainStub == j_muonAssociatedStub) {
-          //cout << "NOT UNIQUE STUBS !!!!!! " << endl;
+          cout << "Stub is one of TkMuStub associated stubs !!!!!! " << endl;
           rc = false;
         }
 
@@ -872,6 +891,7 @@ float MuonJet::getPhiAtVertex(const EMTFHit & muStub) {
 float MuonJet::getPtFromBendingAngle(const EMTFHit & muStub) {
 
   float stubBend = muStub.Bend();
+  float x = std::abs(stubBend);
   float stubPt = -99;
 
   // convert bend angle phi to rad in ME0 
@@ -895,7 +915,8 @@ float MuonJet::getPtFromBendingAngle(const EMTFHit & muStub) {
     float stripSize = -1; // in mrad
     
     if(muStub.Station()== 1) {
-      if( muStub.Ring() == 1) stripSize =  2.96; // ME1/1
+      if( muStub.Ring() == 4) stripSize =  3.88; // ME1/1a
+      if( muStub.Ring() == 1) stripSize =  2.96; // ME1/1b
       if( muStub.Ring() == 2) stripSize =  2.33; // ME1/2
       if( muStub.Ring() == 3) stripSize =  2.16; // ME1/3
     }
@@ -915,17 +936,72 @@ float MuonJet::getPtFromBendingAngle(const EMTFHit & muStub) {
       if(muStub.Ring() == 2) stripSize =  2.33; // ME4/1
     }
       
+    /*
+    if(muStub.Station()== 1) {
+      if( muStub.Ring() == 4) stubPt = 0.7 +  31./(stubBend-1.7); // ME1/4 - eta 2.0-2.4
+      if( muStub.Ring() == 1) stubPt = 0.7 +  10.7/(stubBend-3.2); // ME1/1 - eta 1.5-2.0
+      if( muStub.Ring() == 2) stubPt = 0.7 +  50./(stubBend-0.76); // ME1/2 - eta 1.2-1.5
+      if( muStub.Ring() == 3) {
+        stubBend *= stripSize*32.0/4.0/1000.; // in rad
+        stubPt = 1.0 / stubBend; // in GeV
+      }
+    }
+    */
+
     stubBend *= stripSize*32.0/4.0/1000.; // in rad
     stubPt = 1.0 / stubBend; // in GeV
 
-    if(muStub.Station()== 1) {
-      if( muStub.Ring() == 4) stubPt = 0.5 +  31./(stubBend-1.7); // ME1/4 - eta 2.0-2.4
-      if( muStub.Ring() == 1) stubPt = 0.5 +  10.7/(stubBend-3.2); // ME1/1 - eta 1.5-2.0
-      if( muStub.Ring() == 2) stubPt = 0.5 +  50 /(stubBend-0.76); // ME1/2 - eta 1.2-1.5
-      //if( muStub.Ring() == 3) stubPt =  // ME1/3 - ????
-    }
-
   } // end if CSC
+
+  // ///////////////////////////////////////
+  //
+  // use fit function to get Pt from Bending 
+  // 
+  //
+  // ///////////////////////////////////////
+  float p0 = 0;
+  float p1 = 0;
+  float p2 = 0;
+    
+  int type = muStub.Subsystem();
+  int station = muStub.Station();
+  int ring = muStub.Ring();
+
+  if(type == EMTFHit::kCSC && station == 1) {
+    if (ring == 1) { p0 = 2.00; p1 = -0.09; p2 = 0.005; }
+    if (ring == 2) { p0 = 2.00; p1 = -0.07; p2 = 0.003; }
+    if (ring == 3) { p0 = 2.00; p1 = -0.07; p2 = 0.003; }  // no data for ME 1/3 so use data for ME 1/2 as the best appproximation
+    if (ring == 4) { p0 = 2.00; p1 = -0.14; p2 = 0.011; }
+    cout << " Calculating PtFromBendingAngle using fit function: " ;
+    cout << " type = " << type ;
+    cout << " station = " << station ;
+    cout << " ring  = " << ring ;
+    cout << " p0 = " << p0 ;
+    cout << " p1 = " << p1 ;
+    cout << " p2 = " << p2 ;
+    cout << " bend = " << x ;
+    float fittedPt = TMath::Exp(p0 + p1*x) * (p0 + p1*x + p2*x*x);
+    cout << " ...... fitted pt = " << abs(fittedPt) << endl;
+  }
+  if(type == EMTFHit::kME0 && station == 1) {
+    if (ring == 1) { p0 = 1.93; p1 = -0.04; p2 = 0.001; }
+    cout << " Calculating PtFromBendingAngle using fit function: " ;
+    cout << " type = " << type ;
+    cout << " station = " << station ;
+    cout << " ring  = " << ring ;
+    cout << " p0 = " << p0 ;
+    cout << " p1 = " << p1 ;
+    cout << " p2 = " << p2 ;
+    cout << " bend = " << x ;
+    float fittedPt = TMath::Exp(p0 + p1*x) * (p0 + p1*x + p2*x*x);
+    cout << " ...... fitted pt = " << abs(fittedPt) << endl;
+  }
+
+  stubPt = TMath::Exp(p0 + p1*x) * (p0 + p1*x + p2*x*x);
+
+  float fittedPt = TMath::Exp(p0 + p1*x) * (p0 + p1*x + p2*x*x);
+
+  cout << " ...... pt = " << abs(stubPt)  << " .... fitted pt = " << abs(fittedPt) << endl;
 
   return abs(stubPt);
 

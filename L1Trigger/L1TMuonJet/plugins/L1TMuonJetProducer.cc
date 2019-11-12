@@ -476,19 +476,30 @@ L1TMuonJetProducer::findMuonJets(const edm::Handle<EMTFHitCollection>& l1muonStu
 
 
   // collection for cleaned stubs
+  EMTFHitCollection allCleanedStubs;
   EMTFHitCollection cleanedStubs;
 
   // reserve to size of original coolection
   cleanedStubs.reserve(l1muStubs.size());
   
   // fill collection of cleaned stubs
-  cleanStubs(l1muStubs, cleanedStubs);
+  cleanStubs(l1muStubs, allCleanedStubs);
+
+  // pack only station 1 stubs from CSC and ME0
+  for(uint i = 0; i < allCleanedStubs.size(); i++) {
+
+    const EMTFHit & muStub = allCleanedStubs[i];
+    if(muStub.Station() == 1 && (muStub.Subsystem() == EMTFHit::kCSC || muStub.Subsystem() == EMTFHit::kME0) ) {
+      cleanedStubs.push_back(muStub);
+    }
+
+  }
 
   // print original collection
-  if(debug_) printStubs(l1muStubs, EMTFHit::kCSC);
+  //if(debug_) printStubs(l1muStubs, EMTFHit::kCSC);
 
   // print cleaned collection
-  if(debug_) printStubs(cleanedStubs, EMTFHit::kCSC);
+  //if(debug_) printStubs(cleanedStubs, EMTFHit::kCSC);
 
   // 1st loop over TkMuStubs
   for(uint i_tkms = 0; i_tkms < l1tkmuStubs.size(); i_tkms++) {

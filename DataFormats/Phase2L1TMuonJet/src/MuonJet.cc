@@ -972,6 +972,7 @@ float MuonJet::getPtFromBendingAngle(const EMTFHit & muStub) {
     if (ring == 2) { p0 = 2.00; p1 = -0.07; p2 = 0.003; }
     if (ring == 3) { p0 = 2.00; p1 = -0.07; p2 = 0.003; }  // no data for ME 1/3 so use data for ME 1/2 as the best appproximation
     if (ring == 4) { p0 = 2.00; p1 = -0.14; p2 = 0.011; }
+    /*
     cout << " Calculating PtFromBendingAngle using fit function: " ;
     cout << " type = " << type ;
     cout << " station = " << station ;
@@ -982,9 +983,11 @@ float MuonJet::getPtFromBendingAngle(const EMTFHit & muStub) {
     cout << " bend = " << x ;
     float fittedPt = TMath::Exp(p0 + p1*x) * (p0 + p1*x + p2*x*x);
     cout << " ...... fitted pt = " << abs(fittedPt) << endl;
+    */
   }
   if(type == EMTFHit::kME0 && station == 1) {
     if (ring == 1) { p0 = 1.93; p1 = -0.04; p2 = 0.001; }
+    /*
     cout << " Calculating PtFromBendingAngle using fit function: " ;
     cout << " type = " << type ;
     cout << " station = " << station ;
@@ -995,13 +998,15 @@ float MuonJet::getPtFromBendingAngle(const EMTFHit & muStub) {
     cout << " bend = " << x ;
     float fittedPt = TMath::Exp(p0 + p1*x) * (p0 + p1*x + p2*x*x);
     cout << " ...... fitted pt = " << abs(fittedPt) << endl;
+    */
   }
 
   stubPt = TMath::Exp(p0 + p1*x) * (p0 + p1*x + p2*x*x);
 
+  /*
   float fittedPt = TMath::Exp(p0 + p1*x) * (p0 + p1*x + p2*x*x);
-
   cout << " ...... pt = " << abs(stubPt)  << " .... fitted pt = " << abs(fittedPt) << endl;
+  */
 
   return abs(stubPt);
 

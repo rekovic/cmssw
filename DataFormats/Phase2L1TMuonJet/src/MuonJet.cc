@@ -570,6 +570,14 @@ void  MuonJet::process() {
     if(muonType_[2] == k_MUSTUB) LVAtVtx01  = LVAtVtx[0] + LVAtVtx[1];
  
  }
+ // for ONE_TKMUSTUB_TWO_MUSTUB, use the one track-matched leggs (muonType_ k_TKMUSTUB) and highest pt stube (type MUSTUB)
+  if(type_ == ONE_TKMUSTUB_TWO_MUSTUB) {
+
+    if(muonType_[0] == k_TKMUSTUB) LVAtVtx01  = LVAtVtx[0] + LVAtVtx[1];
+    if(muonType_[1] == k_TKMUSTUB) LVAtVtx01  = LVAtVtx[1] + LVAtVtx[0];
+    if(muonType_[2] == k_TKMUSTUB) LVAtVtx01  = LVAtVtx[2] + LVAtVtx[0];
+ 
+ }
 
   mass12_ = LVAtVtx01.M();
 
@@ -616,34 +624,34 @@ bool MuonJet::isValid()
 
   //cout << "       deltaZ_ = " << deltaZ_ << "  maxDeltaZ_ " << maxDeltaZ_ << endl;
   if (deltaZ_ > maxDeltaZ_) {
-    cout << "    deltaZ out of range!" << endl;
+    //cout << "    deltaZ out of range!" << endl;
     return false;
   }
   if (deltaR_ > maxDeltaR_) {
-    cout << "    deltaR out of range!" << endl;
+    //cout << "    deltaR out of range!" << endl;
     return false;
   }
   if (abs(totalCharge_) > 1) {
-    cout << "    Total charge out of range!" << endl;
+    //cout << "    Total charge out of range!" << endl;
     return false;
   }
 
   for (int i = 0 ; i<3 ; i++) {
     if(! isValidLeg(i) ) {
-      cout << "    isValidLeg " << i << " is false!" << endl;
+      //cout << "    isValidLeg " << i << " is false!" << endl;
       return false;
     }
   }
 
   // Sanity check: the principle stubs of TkMuStub object are unique, by construction of TkMuStub object
   if(type_ == THREE_TKMUSTUB && ! areUniqueTkMuStubs() ) {
-    cout << "    areUnique TkMuStubs is false!" << endl;
+    //cout << "    areUnique TkMuStubs is false!" << endl;
     return false;
   }
 
   // Check that stub of MUSTUB type leg are not among stubs associated with another leg
   if(type_ != THREE_TKMUSTUB && ! areUniqueStubs() ) {
-    cout << "    areUnique MuStubs is false!" << endl;
+    //cout << "    areUnique MuStubs is false!" << endl;
     return false;
   }
 

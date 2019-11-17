@@ -258,10 +258,10 @@ L1TkMuonStubProducer::runOnMuonHitCollection(const edm::Handle<EMTFHitCollection
       continue;
 
     std::vector<int> tkMatchedStubs = matchedStubsPerTrack.at(il1ttrack);
-    cout << "      TkMuStub: i_Track = " << il1ttrack << " closest_matched_stub = " << muStub_idx << " , ( all matched stubs = ";
-    for (auto ssm = tkMatchedStubs.begin(); ssm != tkMatchedStubs.end(); ++ssm)
-      cout << *ssm << ' ';
-    cout << " ) " << endl;
+    // cout << "      TkMuStub: i_Track = " << il1ttrack << " closest_matched_stub = " << muStub_idx << " , ( all matched stubs = ";
+    // for (auto ssm = tkMatchedStubs.begin(); ssm != tkMatchedStubs.end(); ++ssm)
+    //  cout << *ssm << ' ';
+    // cout << " ) " << endl;
 
     const L1TTTrackType& matchTk = l1trks[il1ttrack];
     const auto& p3 = matchTk.getMomentum(dwcorr_->get_n_trk_par());

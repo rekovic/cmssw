@@ -798,7 +798,7 @@ bool const MuonJet::areUniqueStubs ()
         const EMTFHitRef j_muonAssociatedStub = *it;
 
         if(i_muonMainStub == j_muonAssociatedStub) {
-          cout << "Stub is one of TkMuStub associated stubs !!!!!! " << endl;
+          //cout << "Stub is one of TkMuStub associated stubs !!!!!! " << endl;
           rc = false;
         }
 

@@ -14,7 +14,7 @@
 #include "DataFormats/Common/interface/View.h"
 #include "DataFormats/Phase2L1ParticleFlow/interface/PFCandidate.h"
 #include "DataFormats/L1TVertex/interface/Vertex.h"
-#include "DataFormats/L1TrackTrigger/interface/L1TkPrimaryVertex.h"
+#include "DataFormats/Phase2L1Correlator/interface/TkPrimaryVertex.h"
 
 #include "DataFormats/Math/interface/deltaR.h"
 
@@ -48,7 +48,7 @@ class L1TPFProducer : public edm::stream::EDProducer<> {
         unsigned trkMinStubs_;
         l1tpf_impl::PUAlgoBase::VertexAlgo vtxAlgo_;  
         edm::EDGetTokenT<std::vector<l1t::Vertex>> extVtx_;
-        edm::EDGetTokenT<std::vector<l1t::L1TkPrimaryVertex>> extTkVtx_;
+        edm::EDGetTokenT<std::vector<l1t::TkPrimaryVertex>> extTkVtx_;
 
         edm::EDGetTokenT<l1t::MuonBxCollection> muCands_; // standalone muons
         edm::EDGetTokenT<l1t::TkMuonCollection> tkMuCands_;         // tk muons
@@ -146,7 +146,7 @@ L1TPFProducer::L1TPFProducer(const edm::ParameterSet& iConfig):
         if (vtxFormat == "Vertex") {
             extVtx_  = consumes<std::vector<l1t::Vertex>>(iConfig.getParameter<edm::InputTag>("vtxCollection"));
         } else if (vtxFormat == "L1TkPrimaryVertex") {
-            extTkVtx_  = consumes<std::vector<l1t::L1TkPrimaryVertex>>(iConfig.getParameter<edm::InputTag>("vtxCollection"));
+            extTkVtx_  = consumes<std::vector<l1t::TkPrimaryVertex>>(iConfig.getParameter<edm::InputTag>("vtxCollection"));
         } else throw cms::Exception("Configuration") << "Unsupported vtxFormat " << vtxFormat << "\n";
     } else throw cms::Exception("Configuration") << "Unsupported vtxAlgo " << vtxAlgo << "\n";
 
@@ -289,16 +289,16 @@ L1TPFProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             iEvent.getByToken(extVtx_, vtxHandle);
             for (const l1t::Vertex & vtx : *vtxHandle) {
                 double myptsum = 0; 
-                for (const auto & tkptr : vtx.tracks()) { myptsum += std::min(tkptr->getMomentum(4).perp(), 50.f); }
+                for (const auto & tkptr : vtx.tracks()) { myptsum += std::min(tkptr->momentum().perp(), 50.f); }
                 if (myptsum > ptsum) { z0 = vtx.z0(); ptsum = myptsum; }
             }
         } else if (!extTkVtx_.isUninitialized()) {
-            edm::Handle<std::vector<l1t::L1TkPrimaryVertex>> vtxHandle;
+            edm::Handle<std::vector<l1t::TkPrimaryVertex>> vtxHandle;
             iEvent.getByToken(extTkVtx_, vtxHandle);
-            for (const l1t::L1TkPrimaryVertex & vtx : *vtxHandle) {
-                if (ptsum == 0 || vtx.getSum() > ptsum) {
-                    z0 = vtx.getZvertex();
-                    ptsum = vtx.getSum();
+            for (const l1t::TkPrimaryVertex & vtx : *vtxHandle) {
+                if (ptsum == 0 || vtx.sum() > ptsum) {
+                    z0 = vtx.zvertex();
+                    ptsum = vtx.sum();
                 }
             }
         } else throw cms::Exception("LogicError", "Inconsistent vertex configuration");

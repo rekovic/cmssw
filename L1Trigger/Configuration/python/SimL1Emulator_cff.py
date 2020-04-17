@@ -60,12 +60,12 @@ from L1Trigger.L1TTwinMux.fakeTwinMuxParams_cff import *
 _phase2_siml1emulator = SimL1EmulatorTask.copy()
 
 # # Customisation for the phase2_hgcal era. Includes the HGCAL L1 trigger
-#from  L1Trigger.L1THGCal.hgcalTriggerPrimitives_cff import *
-#_phase2_siml1emulator.add(hgcalTriggerPrimitivesTask)
+from  L1Trigger.L1THGCal.hgcalTriggerPrimitives_cff import *
+_phase2_siml1emulator.add(hgcalTriggerPrimitivesTask)
 
-#from Configuration.Eras.Modifier_phase2_hgcal_cff import phase2_hgcal
-#from Configuration.Eras.Modifier_phase2_hgcalV11_cff import phase2_hgcalV11
-#(phase2_hgcal & ~phase2_hgcalV11).toReplaceWith( SimL1EmulatorTask , _phase2_siml1emulator )
+from Configuration.Eras.Modifier_phase2_hgcal_cff import phase2_hgcal
+from Configuration.Eras.Modifier_phase2_hgcalV11_cff import phase2_hgcalV11
+(phase2_hgcal & ~phase2_hgcalV11).toReplaceWith( SimL1EmulatorTask , _phase2_siml1emulator )
 
 #phase2_hgcal.toReplaceWith( SimL1EmulatorTask , _phase2_siml1emulator )
 
@@ -78,9 +78,10 @@ phase2_SimL1Emulator = SimL1Emulator.copy()
 
 #%% # Vertex
 #%% # ########################################################################
-#%% from L1Trigger.VertexFinder.VertexProducer_cff import *
+#from L1Trigger.VertexFinder.VertexProducer_cff import *
 #%% 
 #%% phase2_SimL1Emulator += VertexProducer
+#_phase2_siml1emulator.add(VertexProducer)
 
 #%% # Barrel EGamma
 #%% # ########################################################################
@@ -91,8 +92,9 @@ from L1Trigger.L1CaloTrigger.L1EGammaCrystalsEmulatorProducer_cfi import *
 #%% phase2_SimL1Emulator += L1EGammaClusterEmuProducer
 _phase2_siml1emulator.add(L1EGammaClusterEmuProducer)
 
-#%% from L1Trigger.L1CaloTrigger.l1EGammaEEProducer_cfi import *
+from L1Trigger.L1CaloTrigger.l1EGammaEEProducer_cfi import *
 #%% phase2_SimL1Emulator += l1EGammaEEProducer
+_phase2_siml1emulator.add(l1EGammaEEProducer)
 
 #%% #  CaloJets
 #%% # ########################################################################
@@ -136,18 +138,22 @@ _phase2_siml1emulator.add(L1TkPrimaryVertex)
 #%% phase2_SimL1Emulator += L1TkElectronsEllipticMatchCrystal
 _phase2_siml1emulator.add(L1TkElectronsEllipticMatchCrystal)
 #%% phase2_SimL1Emulator += L1TkIsoElectronsCrystal
+_phase2_siml1emulator.add(L1TkIsoElectronsCrystal)
 #_phase2_siml1emulator.add(L1TkIsoElectronsCrystal)
 #%% phase2_SimL1Emulator += L1TkElectronsLooseCrystal
 #_phase2_siml1emulator.add(L1TkElectronsLooseCrystal)
 #%% phase2_SimL1Emulator += L1WP2Electrons
-_phase2_siml1emulator.add(L1WP2Electrons)
+#%% _phase2_siml1emulator.add(L1WP2Electrons)
 #%% phase2_SimL1Emulator += L1TkPhotonsCrystal
 _phase2_siml1emulator.add(L1TkPhotonsCrystal)
 #%% phase2_SimL1Emulator += L1TkElectronsHGC
 #%% phase2_SimL1Emulator += L1TkElectronsEllipticMatchHGC
+_phase2_siml1emulator.add(L1TkElectronsEllipticMatchHGC)
 #%% phase2_SimL1Emulator += L1TkIsoElectronsHGC
+_phase2_siml1emulator.add(L1TkIsoElectronsHGC)
 #%% phase2_SimL1Emulator += L1TkElectronsLooseHGC
 #%% phase2_SimL1Emulator += L1TkPhotonsHGC
+_phase2_siml1emulator.add(L1TkPhotonsHGC)
 
 #%% phase2_SimL1Emulator += L1TkCaloJets
 #%% phase2_SimL1Emulator += TwoLayerJets
@@ -166,27 +172,33 @@ _phase2_siml1emulator.add( L1TkMuons )
 
 #%% # PF Candidates
 #%% # ########################################################################
-#%% from L1Trigger.Phase2L1ParticleFlow.l1ParticleFlow_cff import *
+from L1Trigger.Phase2L1ParticleFlow.l1ParticleFlow_cff import *
 #%% phase2_SimL1Emulator += l1ParticleFlow
-#%% _phase2_siml1emulator.add(l1ParticleFlowTask)
+_phase2_siml1emulator.add(l1ParticleFlowTask)
 
-#%% from L1Trigger.Phase2L1ParticleFlow.l1pfJetMet_cff import *
+from L1Trigger.Phase2L1ParticleFlow.l1pfJetMet_cff import *
 # Describe here l1PFJets sequence
 # ###############################
 #l1PFJets = cms.Sequence(
 #  ak4PFL1Calo + ak4PFL1PF + ak4PFL1Puppi +
 #  ak4PFL1CaloCorrected + ak4PFL1PFCorrected + ak4PFL1PuppiCorrected)
 #%% phase2_SimL1Emulator += l1PFJets
+l1PFJetsTask = cms.Task(
+  ak4PFL1Calo , ak4PFL1PF , ak4PFL1Puppi ,
+  ak4PFL1CaloCorrected , ak4PFL1PFCorrected , ak4PFL1PuppiCorrected)
+_phase2_siml1emulator.add(l1PFJetsTask)
 # Describe here l1PFMets sequence
 # ###############################
 #l1PFMets = cms.Sequence(l1PFMetCalo + l1PFMetPF + l1PFMetPuppi)
 #%% phase2_SimL1Emulator += l1PFMets
+l1PFMetsTask = cms.Task(l1PFMetCalo , l1PFMetPF , l1PFMetPuppi)
+_phase2_siml1emulator.add(l1PFMetsTask)
 
 #%% # Phase1 PF jets
 #%% # ########################################################################
-#%% from L1Trigger.L1CaloTrigger.Phase1L1TJets_cff import *
+from L1Trigger.L1CaloTrigger.Phase1L1TJets_cff import *
 #%% phase2_SimL1Emulator += Phase1L1TJetsSequence
-#%% _phase2_siml1emulator.add(Phase1L1TJetsTask)
+_phase2_siml1emulator.add(Phase1L1TJetsTask)
 
 #%% # PFTaus(HPS)
 #%% # ########################################################################
@@ -204,13 +216,15 @@ _phase2_siml1emulator.add( L1TkMuons )
 #%% 
 #%% # NNTaus
 #%% # ########################################################################
-#%% from L1Trigger.Phase2L1Taus.L1NNTauProducer_cff import *
+#%%from L1Trigger.Phase2L1Taus.L1NNTauProducer_cff import *
 #%% l1NNTauProducer = L1NNTauProducer.clone()
 #%% l1NNTauProducer.L1PFObjects = cms.InputTag("l1pfCandidates","PF")
 #%% l1NNTauProducerPuppi = L1NNTauProducerPuppi.clone()
 #%% l1NNTauProducerPuppi.L1PFObjects = cms.InputTag("l1pfCandidates","Puppi")
 #%% phase2_SimL1Emulator += l1NNTauProducer
 #%% phase2_SimL1Emulator += l1NNTauProducerPuppi
+#%% _phase2_siml1emulator.add(l1NNTauProducer)
+#%% _phase2_siml1emulator.add(l1NNTauProducerPuppi)
 #%% 
 #%% # Bs
 #%% # ########################################################################

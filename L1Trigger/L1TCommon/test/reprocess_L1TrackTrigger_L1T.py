@@ -13,15 +13,15 @@ process = cms.Process('REPR',eras.Phase2C9_trigger)
 # edit options here
 ############################################################
 
-GEOMETRY = "D49"
-#GEOMETRY = "D41"
+#GEOMETRY = "D49"
+GEOMETRY = "D41"
 #GEOMETRY = "D35" # <== to run on old tracker geometry, change flag "geomTkTDR" to *true* in ../interface/Constants.hh 
 
 # Specify L1 tracking algo ('HYBRID', 'HYBRID_DISPLACED', 'TMTT','HYBRID_FLOAT', 'TRACKLET_FLOAT')
 L1TRKALGO = 'HYBRID'
 
 # Write output dataset?
-WRITE_DATA = False
+WRITE_DATA = True
 
 if (L1TRKALGO == 'HYBRID_FLOAT'):
     if ( not os.path.exists( os.environ['CMSSW_BASE']+'/src/L1Trigger/HybridFloat' ) ):
@@ -35,6 +35,7 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.EventContent.EventContent_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
+process.load('SimGeneral.MixingModule.mixNoPU_cfi')
 
 if GEOMETRY == "D35": 
     print "using geometry " + GEOMETRY + " (tilted)"
@@ -63,7 +64,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 # input and output
 ############################################################
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(5))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(2))
 
 # Get list of MC datasets from repo, or specify yourself.
 
@@ -243,17 +244,18 @@ if (WRITE_DATA):
   process.writeDataset = cms.OutputModule("PoolOutputModule",
       splitLevel = cms.untracked.int32(0),
       eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-      outputCommands = process.RAWSIMEventContent.outputCommands,
+      outputCommands = process.FEVTDEBUGHLTEventContent.outputCommands,
       fileName = cms.untracked.string('output_dataset.root'), ## ADAPT IT ##
       dataset = cms.untracked.PSet(
           filterName = cms.untracked.string(''),
-          dataTier = cms.untracked.string('GEN-SIM')
+          dataTier = cms.untracked.string('GEN-SIM-DIGI-RAW'),
       )
   )
   # Include TMTT L1 tracks & associators + stubs.
-  process.writeDataset.outputCommands.append('keep  *TTTrack*_*_*_*')
-  process.writeDataset.outputCommands.append('keep  *TTStub*_*_*_*')
+  #process.writeDataset.outputCommands.append('keep  *TTTrack*_*_*_*')
+  #process.writeDataset.outputCommands.append('keep  *TTStub*_*_*_*')
   process.writeDataset.outputCommands.append('keep  *_*_*_*')
+  #process.options = cms.untracked.PSet( SkipEvent = cms.untracked.vstring('ProductNotFound') )
 
   process.pd = cms.EndPath(process.writeDataset)
   process.schedule.append(process.pd)

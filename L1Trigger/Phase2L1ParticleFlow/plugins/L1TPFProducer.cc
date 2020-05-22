@@ -39,6 +39,8 @@ class L1TPFProducer : public edm::stream::EDProducer<> {
     private:
         int debug_;
 
+        float npu_;
+
         bool useStandaloneMuons_;
         bool useTrackerMuons_;
 
@@ -81,6 +83,7 @@ class L1TPFProducer : public edm::stream::EDProducer<> {
 //
 L1TPFProducer::L1TPFProducer(const edm::ParameterSet& iConfig):
     debug_(iConfig.getUntrackedParameter<int>("debug",0)),
+    npu_(iConfig.getParameter<double>("npu")),
     useStandaloneMuons_(iConfig.getParameter<bool>("useStandaloneMuons")),
     useTrackerMuons_(iConfig.getParameter<bool>("useTrackerMuons")),
     hasTracks_(!iConfig.getParameter<edm::InputTag>("tracks").label().empty()),
@@ -327,7 +330,7 @@ L1TPFProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     // Then get our alphas (globally)
     std::vector<float> puGlobals;
-    l1pualgo_->doPUGlobals(l1regions_.regions(), -1., puGlobals); // FIXME we don't have yet an external PU estimate
+    l1pualgo_->doPUGlobals(l1regions_.regions(), npu_, puGlobals); // FIXME we don't have yet an external PU estimate, use npu from config
     const std::vector<std::string> & puGlobalNames = l1pualgo_->puGlobalNames();
     assert(puGlobals.size() == puGlobalNames.size());
     for (unsigned int i = 0, n = puGlobalNames.size(); i < n; ++i) {
@@ -339,7 +342,7 @@ L1TPFProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     // Then run puppi (regionally)
     for (auto & l1region : l1regions_.regions()) {
-        l1pualgo_->runNeutralsPU(l1region, -1., puGlobals);
+        l1pualgo_->runNeutralsPU(l1region, npu_, puGlobals);  // FIXME we don't have yet an external PU estimate, use npu from config
     }
     // and save puppi
     iEvent.put(l1regions_.fetch(true), "Puppi");

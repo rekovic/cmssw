@@ -3,6 +3,7 @@ import FWCore.ParameterSet.Config as cms
 from math import sqrt
 
 l1pfProducer = cms.EDProducer("L1TPFProducer",
+     npu = cms.double( 200 ), # in future deduce this from # of tracks non-associated with pvtx
      tracks = cms.InputTag('pfTracksFromL1Tracks'),
      muons = cms.InputTag('simGmtStage2Digis',),
      tkMuons = cms.InputTag('L1TkMuons'),

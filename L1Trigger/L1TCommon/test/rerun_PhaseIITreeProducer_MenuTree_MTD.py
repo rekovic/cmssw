@@ -18,6 +18,12 @@ process.load('Configuration.StandardSequences.SimL1Emulator_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
+#nPU = 200
+#process.l1pfProducerBarrel.npu = cms.double(nPU)
+#process.l1pfProducerHGCal.npu = cms.double(nPU)
+#process.l1pfProducerHGCalNoTK.npu = cms.double(nPU)
+#process.l1pfProducerHF.npu = cms.double(nPU)
+
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(100)
 )

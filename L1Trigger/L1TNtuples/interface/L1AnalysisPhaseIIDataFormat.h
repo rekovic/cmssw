@@ -289,6 +289,10 @@ namespace L1Analysis
 
       puppiMETEt=0;
       puppiMETPhi=0;
+      puppiMETNoHFEt=0;
+      puppiMETNoHFPhi=0;
+      puppiMETTrackerEt=0;
+      puppiMETTrackerPhi=0;
       puppiHT.clear();
       puppiMHTEt.clear();
       puppiMHTPhi.clear();
@@ -653,6 +657,12 @@ namespace L1Analysis
 
     double puppiMETEt;
     double puppiMETPhi;
+
+    double puppiMETNoHFEt;
+    double puppiMETNoHFPhi;
+
+    double puppiMETTrackerEt;
+    double puppiMETTrackerPhi;
 
     std::vector<double> puppiHT;
     std::vector<double> puppiMHTEt;

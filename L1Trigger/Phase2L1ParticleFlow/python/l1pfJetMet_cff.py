@@ -6,8 +6,9 @@ l1PFMetCalo    = _pfMet.clone(src = "l1pfCandidates:Calo")
 l1PFMetPF      = _pfMet.clone(src = "l1pfCandidates:PF")
 l1PFMetPuppi   = _pfMet.clone(src = "l1pfCandidates:Puppi")
 l1PFMetPuppiNoHF   = _pfMet.clone(src = "l1pfCandidatesNoHF:Puppi")
+l1PFMetPuppiTracker   = _pfMet.clone(src = "l1pfCandidatesTracker:Puppi")
 
-l1PFMets = cms.Sequence(l1PFMetCalo + l1PFMetPF + l1PFMetPuppi + l1PFMetPuppiNoHF)
+l1PFMets = cms.Sequence(l1PFMetCalo + l1PFMetPF + l1PFMetPuppi + l1PFMetPuppiNoHF + l1PFMetPuppiTracker)
 
 from RecoJets.JetProducers.ak4PFJets_cfi import ak4PFJets as _ak4PFJets
 _ak4PFJets.doAreaFastjet = False
@@ -15,6 +16,7 @@ ak4PFL1Calo    = _ak4PFJets.clone(src = 'l1pfCandidates:Calo')
 ak4PFL1PF      = _ak4PFJets.clone(src = 'l1pfCandidates:PF')
 ak4PFL1Puppi   = _ak4PFJets.clone(src = 'l1pfCandidates:Puppi')
 ak4PFL1PuppiNoHF   = _ak4PFJets.clone(src = 'l1pfCandidatesNoHF:Puppi')
+ak4PFL1PuppiTracker   = _ak4PFJets.clone(src = 'l1pfCandidatesTracker:Puppi')
 
 _correctedJets = cms.EDProducer("L1TCorrectedPFJetProducer", 
     jets = cms.InputTag("_tag_"),
@@ -31,7 +33,7 @@ ak4PFL1PFCorrected = _correctedJets.clone(jets = 'ak4PFL1PF', correctorDir = 'L1
 ak4PFL1PuppiCorrected = _correctedJets.clone(jets = 'ak4PFL1Puppi', correctorDir = 'L1PuppiJets')
 
 l1PFJets = cms.Sequence(
-    ak4PFL1Calo + ak4PFL1PF + ak4PFL1Puppi + ak4PFL1PuppiNoHF +
+    ak4PFL1Calo + ak4PFL1PF + ak4PFL1Puppi + ak4PFL1PuppiNoHF + ak4PFL1PuppiTracker + 
     ak4PFL1CaloCorrected + ak4PFL1PFCorrected + ak4PFL1PuppiCorrected
 )
 

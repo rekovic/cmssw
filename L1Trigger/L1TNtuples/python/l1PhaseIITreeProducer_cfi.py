@@ -52,6 +52,8 @@ l1PhaseIITree = cms.EDAnalyzer("L1PhaseIITreeProducer",
    muonEndcap = cms.InputTag("simEmtfDigis","EMTF"),
 
    l1PFMet = cms.InputTag("l1PFMetPuppi"),
+   l1PFMetNoHF = cms.InputTag("l1PFMetPuppiNoHF"),
+   l1PFMetTracker = cms.InputTag("l1PFMetPuppiTracker"),
 
    zoPuppi = cms.InputTag("l1pfProducerBarrel","z0"),
    l1vertextdr = cms.InputTag("VertexProducer","l1vertextdr"),

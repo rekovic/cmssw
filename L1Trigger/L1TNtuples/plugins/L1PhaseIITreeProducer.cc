@@ -167,6 +167,8 @@ class L1PhaseIITreeProducer : public edm::EDAnalyzer {
                 edm::EDGetTokenT<l1t::RegionalMuonCandBxCollection> muonEndcap_;
 
                 edm::EDGetTokenT<std::vector<reco::PFMET> > l1PFMet_;
+                edm::EDGetTokenT<std::vector<reco::PFMET> > l1PFMetNoHF_;
+                edm::EDGetTokenT<std::vector<reco::PFMET> > l1PFMetTracker_;
 
                 edm::EDGetTokenT<std::vector<reco::CaloJet> > l1pfPhase1L1TJetToken_; // why are these caloJets??? 
 
@@ -243,6 +245,8 @@ L1PhaseIITreeProducer::L1PhaseIITreeProducer(const edm::ParameterSet& iConfig){
         muonEndcap_ = consumes<l1t::RegionalMuonCandBxCollection> (iConfig.getParameter<edm::InputTag>("muonEndcap"));
 
         l1PFMet_  = consumes< std::vector<reco::PFMET> > (iConfig.getParameter<edm::InputTag>("l1PFMet"));
+        l1PFMetNoHF_  = consumes< std::vector<reco::PFMET> > (iConfig.getParameter<edm::InputTag>("l1PFMetNoHF"));
+        l1PFMetTracker_  = consumes< std::vector<reco::PFMET> > (iConfig.getParameter<edm::InputTag>("l1PFMetTracker"));
 
         z0PuppiToken_ = consumes< float > (iConfig.getParameter<edm::InputTag>("zoPuppi"));
         l1vertextdrToken_ = consumes< l1t::VertexCollection> (iConfig.getParameter<edm::InputTag>("l1vertextdr"));
@@ -372,6 +376,12 @@ L1PhaseIITreeProducer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
         edm::Handle< std::vector<reco::PFMET> > l1PFMet;
         iEvent.getByToken(l1PFMet_, l1PFMet);
+
+        edm::Handle< std::vector<reco::PFMET> > l1PFMetNoHF;
+        iEvent.getByToken(l1PFMetNoHF_, l1PFMetNoHF);
+
+        edm::Handle< std::vector<reco::PFMET> > l1PFMetTracker;
+        iEvent.getByToken(l1PFMetTracker_, l1PFMetTracker);
 
         edm::Handle<  std::vector<reco::CaloJet>  > l1pfPhase1L1TJet;
         iEvent.getByToken(l1pfPhase1L1TJetToken_,  l1pfPhase1L1TJet);
@@ -615,6 +625,18 @@ L1PhaseIITreeProducer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 l1Extra->SetL1METPF(l1PFMet);
         } else{
                 edm::LogWarning("MissingProduct") << "L1PFMet missing"<<std::endl;
+        }
+
+        if(l1PFMetNoHF.isValid()){
+                l1Extra->SetL1METPFNoHF(l1PFMetNoHF);
+        } else{
+                edm::LogWarning("MissingProduct") << "L1PFMetNoHF missing"<<std::endl;
+        }
+
+        if(l1PFMetTracker.isValid()){
+                l1Extra->SetL1METPFTracker(l1PFMetTracker);
+        } else{
+                edm::LogWarning("MissingProduct") << "L1PFMetTracker missing"<<std::endl;
         }
 
         if(l1PFCandidates.isValid()){

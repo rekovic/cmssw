@@ -123,6 +123,8 @@ namespace L1Analysis
     // Add new PFJet collections 
     void SetPFJet  (const      edm::Handle<l1t::PFJetCollection>  PFJet,    unsigned maxL1Extra);
     void SetL1METPF(const edm::Handle< std::vector<reco::PFMET> > l1MetPF);
+    void SetL1METPFNoHF(const edm::Handle< std::vector<reco::PFMET> > l1MetPF);
+    void SetL1METPFTracker(const edm::Handle< std::vector<reco::PFMET> > l1MetPF);
     void SetPFObjects(const edm::Handle< vector<l1t::PFCandidate> > l1pfCandidates,unsigned maxL1Extra);
 //    void SetPFJetForMET  (const      edm::Handle<l1t::PFJetCollection>  PFJet,    unsigned maxL1Extra); // this needs to be done better 
 

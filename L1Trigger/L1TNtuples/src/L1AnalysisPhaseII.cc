@@ -670,6 +670,20 @@ void L1Analysis::L1AnalysisPhaseII::SetL1METPF(const edm::Handle< std::vector<re
   l1extra_.puppiMETPhi = met.phi();
 }
 
+void L1Analysis::L1AnalysisPhaseII::SetL1METPFNoHF(const edm::Handle< std::vector<reco::PFMET> > l1MetPF)
+{
+  reco::PFMET met=l1MetPF->at(0);
+  l1extra_.puppiMETNoHFEt = met.et();
+  l1extra_.puppiMETNoHFPhi = met.phi();
+}
+
+void L1Analysis::L1AnalysisPhaseII::SetL1METPFTracker(const edm::Handle< std::vector<reco::PFMET> > l1MetPF)
+{
+  reco::PFMET met=l1MetPF->at(0);
+  l1extra_.puppiMETTrackerEt = met.et();
+  l1extra_.puppiMETTrackerPhi = met.phi();
+}
+
 void L1Analysis::L1AnalysisPhaseII::SetPFObjects(const edm::Handle< vector<l1t::PFCandidate> >  l1pfCandidates,  unsigned maxL1Extra)
 {
       for (unsigned int i=0; i<l1pfCandidates->size() && l1extra_.nPFMuons<maxL1Extra; i++){

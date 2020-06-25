@@ -46,6 +46,7 @@ SimL1EmulatorCoreTask = cms.Task(
 SimL1EmulatorCore = cms.Sequence(SimL1EmulatorCoreTask)
 
 SimL1EmulatorTask = cms.Task(SimL1EmulatorCoreTask)
+SimL1Emulator = cms.Sequence( SimL1EmulatorTask )
 
 # 
 # Emulators are configured from DB (GlobalTags)
@@ -57,10 +58,9 @@ from L1Trigger.L1TGlobal.GlobalParameters_cff import *
 # soon to be removed when availble in GTs
 from L1Trigger.L1TTwinMux.fakeTwinMuxParams_cff import *
 
-_phase2_siml1emulator = SimL1EmulatorTask.copy()
-
-# # Customisation for the phase2_hgcal era. Includes the HGCAL L1 trigger
+# Customisation for the phase2_hgcal era. Includes the HGCAL L1 trigger
 from  L1Trigger.L1THGCal.hgcalTriggerPrimitives_cff import *
+_phase2_siml1emulator = SimL1EmulatorTask.copy()
 _phase2_siml1emulator.add(hgcalTriggerPrimitivesTask)
 
 from Configuration.Eras.Modifier_phase2_hgcal_cff import phase2_hgcal

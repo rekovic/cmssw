@@ -96,11 +96,14 @@ _phase2_siml1emulator.add(l1EGammaEEProducer)
 from L1Trigger.L1TTrackMatch.L1TkObjectProducers_cff import *
 
 _phase2_siml1emulator.add(L1TkPrimaryVertex)
-
+  
+_phase2_siml1emulator.add(L1TkElectronsCrystal)
+_phase2_siml1emulator.add(L1TkElectronsLooseCrystal)
 _phase2_siml1emulator.add(L1TkElectronsEllipticMatchCrystal)
 _phase2_siml1emulator.add(L1TkIsoElectronsCrystal)
 _phase2_siml1emulator.add(L1TkPhotonsCrystal)
 
+_phase2_siml1emulator.add(L1TkElectronsHGC)
 _phase2_siml1emulator.add(L1TkElectronsEllipticMatchHGC)
 _phase2_siml1emulator.add(L1TkIsoElectronsHGC)
 _phase2_siml1emulator.add(L1TkPhotonsHGC)

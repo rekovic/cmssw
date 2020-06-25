@@ -46,7 +46,6 @@ SimL1EmulatorCoreTask = cms.Task(
 SimL1EmulatorCore = cms.Sequence(SimL1EmulatorCoreTask)
 
 SimL1EmulatorTask = cms.Task(SimL1EmulatorCoreTask)
-SimL1Emulator = cms.Sequence( SimL1EmulatorTask )
 
 # 
 # Emulators are configured from DB (GlobalTags)
@@ -58,10 +57,56 @@ from L1Trigger.L1TGlobal.GlobalParameters_cff import *
 # soon to be removed when availble in GTs
 from L1Trigger.L1TTwinMux.fakeTwinMuxParams_cff import *
 
-# Customisation for the phase2_hgcal era. Includes the HGCAL L1 trigger
-from  L1Trigger.L1THGCal.hgcalTriggerPrimitives_cff import *
 _phase2_siml1emulator = SimL1EmulatorTask.copy()
+
+# # Customisation for the phase2_hgcal era. Includes the HGCAL L1 trigger
+from  L1Trigger.L1THGCal.hgcalTriggerPrimitives_cff import *
 _phase2_siml1emulator.add(hgcalTriggerPrimitivesTask)
 
 from Configuration.Eras.Modifier_phase2_hgcal_cff import phase2_hgcal
-phase2_hgcal.toReplaceWith( SimL1EmulatorTask , _phase2_siml1emulator )
+#phase2_hgcal.toReplaceWith( SimL1EmulatorTask , _phase2_siml1emulator )
+
+from Configuration.Eras.Modifier_phase2_hgcalV11_cff import phase2_hgcalV11
+(phase2_hgcal & ~phase2_hgcalV11).toReplaceWith( SimL1EmulatorTask, _phase2_siml1emulator )
+
+SimL1Emulator = cms.Sequence( SimL1EmulatorTask )
+
+# ########################################################################
+# Customisation for the phase2_trigger era, assumes TrackTrigger available
+# ########################################################################
+phase2_SimL1Emulator = SimL1Emulator.copy()
+
+#%% # Vertex
+#%% # ########################################################################
+#from L1Trigger.VertexFinder.VertexProducer_cff import *
+#%% 
+#%% phase2_SimL1Emulator += VertexProducer
+#_phase2_siml1emulator.add(VertexProducer)
+
+#%% # Barrel EGamma
+#%% # ########################################################################
+from L1Trigger.L1CaloTrigger.L1EGammaCrystalsEmulatorProducer_cfi import *
+_phase2_siml1emulator.add(L1EGammaClusterEmuProducer)
+
+from L1Trigger.L1CaloTrigger.l1EGammaEEProducer_cfi import *
+_phase2_siml1emulator.add(l1EGammaEEProducer)
+
+# Tk + StandaloneObj, including L1TkPrimaryVertex
+# ########################################################################
+from L1Trigger.L1TTrackMatch.L1TkObjectProducers_cff import *
+
+_phase2_siml1emulator.add(L1TkPrimaryVertex)
+
+_phase2_siml1emulator.add(L1TkElectronsEllipticMatchCrystal)
+_phase2_siml1emulator.add(L1TkIsoElectronsCrystal)
+_phase2_siml1emulator.add(L1TkPhotonsCrystal)
+
+_phase2_siml1emulator.add(L1TkElectronsEllipticMatchHGC)
+_phase2_siml1emulator.add(L1TkIsoElectronsHGC)
+_phase2_siml1emulator.add(L1TkPhotonsHGC)
+
+_phase2_siml1emulator.add( L1TkMuons )
+
+
+from Configuration.Eras.Modifier_phase2_trigger_cff import phase2_trigger
+phase2_trigger.toReplaceWith( SimL1EmulatorTask , _phase2_siml1emulator)

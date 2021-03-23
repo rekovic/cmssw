@@ -246,9 +246,7 @@ const bool l1t::MuCondition::evaluateCondition(const int bxEval) const {
             }
           }
 
-          // Original OS 4 muon condition (disagreement with firmware): 
-          //    if (!(((chargeCorr & 2) != 0 && equalSigns) || ((chargeCorr & 4) != 0 && posCount == 2))) {
-          // Fix by R. Cavanaugh: 
+          // Notes by R. Cavanaugh: 
           //       Note that negative charge => hwCharge = 0
           //                 positive charge => hwCharge = 1
           //       Hence:  (0,0,0,0) => (posCount = 0) => 4 SS muons

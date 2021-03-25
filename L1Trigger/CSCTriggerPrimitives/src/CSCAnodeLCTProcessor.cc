@@ -1336,10 +1336,7 @@ CSCALCTDigi CSCAnodeLCTProcessor::getBestALCT(int bx) const { return bestALCT[bx
 CSCALCTDigi CSCAnodeLCTProcessor::getSecondALCT(int bx) const { return secondALCT[bx]; }
 
 /** Returns shower bits */
-CSCShowerDigi CSCAnodeLCTProcessor::readoutShower() const
-{
-  return shower_;
-}
+CSCShowerDigi CSCAnodeLCTProcessor::readoutShower() const { return shower_; }
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////Test Routines///////////////////////////////

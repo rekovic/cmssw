@@ -429,9 +429,7 @@ std::vector<CSCCorrelatedLCTDigi> CSCMotherboard::getLCTs() const {
   return tmpV;
 }
 
-CSCShowerDigi CSCMotherboard::readoutShower() const {
-  return shower_;
-}
+CSCShowerDigi CSCMotherboard::readoutShower() const { return shower_; }
 
 void CSCMotherboard::correlateLCTs(
     const CSCALCTDigi& bALCT, const CSCALCTDigi& sALCT, const CSCCLCTDigi& bCLCT, const CSCCLCTDigi& sCLCT, int type) {

@@ -17,20 +17,11 @@ bool l1t::MuonShower::isTwoLooseOutTime() const { return bitsOutTime() == kTwoLo
 
 bool l1t::MuonShower::isOneNominalOutTime() const { return bitsOutTime() == kOneNominal; }
 
-void l1t::MuonShower::setBitsInTime(const uint16_t bits)
-{
-  setDataWord(bits, bits_, kInTimeShift, kInTimeMask);
-}
+void l1t::MuonShower::setBitsInTime(const uint16_t bits) { setDataWord(bits, bits_, kInTimeShift, kInTimeMask); }
 
-void l1t::MuonShower::setBitsOutTime(const uint16_t bits)
-{
-  setDataWord(bits, bits_, kOutTimeShift, kOutTimeMask);
-}
+void l1t::MuonShower::setBitsOutTime(const uint16_t bits) { setDataWord(bits, bits_, kOutTimeShift, kOutTimeMask); }
 
-void l1t::MuonShower::setDataWord(const uint16_t newWord,
-                                  uint16_t& word,
-                                  const unsigned shift,
-                                  const unsigned mask) {
+void l1t::MuonShower::setDataWord(const uint16_t newWord, uint16_t& word, const unsigned shift, const unsigned mask) {
   // clear the old value
   word &= ~(mask << shift);
 

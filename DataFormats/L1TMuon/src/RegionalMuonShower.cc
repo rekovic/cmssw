@@ -21,14 +21,11 @@ bool l1t::RegionalMuonShower::isTwoLooseOutTime() const { return bitsOutTime() =
 
 bool l1t::RegionalMuonShower::isOneNominalOutTime() const { return bitsOutTime() == kOneNominal; }
 
-void l1t::RegionalMuonShower::setBitsInTime(const uint16_t bits)
-{
+void l1t::RegionalMuonShower::setBitsInTime(const uint16_t bits) {
   setDataWord(bits, bits_, kInTimeShift, kInTimeMask);
-
 }
 
-void l1t::RegionalMuonShower::setBitsOutTime(const uint16_t bits)
-{
+void l1t::RegionalMuonShower::setBitsOutTime(const uint16_t bits) {
   setDataWord(bits, bits_, kOutTimeShift, kOutTimeMask);
 }
 

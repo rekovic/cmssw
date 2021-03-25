@@ -17,7 +17,7 @@ namespace l1t {
   public:
     // Run-3 definitions as provided in DN-20-033
     // One nominal shower considered higher quality than two loose showers
-    enum Run3Shower { kInvalid = 0, kTwoLoose = 1, kOneNominal = 2};
+    enum Run3Shower { kInvalid = 0, kTwoLoose = 1, kOneNominal = 2 };
     enum BitMask { kInTimeMask = 0x2, kOutTimeMask = 0x2 };
     enum BitShift { kInTimeShift = 0, kOutTimeShift = 2 };
 

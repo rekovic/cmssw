@@ -25,7 +25,6 @@
 // Trigger Objects
 #include "DataFormats/L1Trigger/interface/EGamma.h"
 #include "DataFormats/L1Trigger/interface/Muon.h"
-#include "DataFormats/L1Trigger/interface/MuonShower.h"
 #include "DataFormats/L1Trigger/interface/Tau.h"
 #include "DataFormats/L1Trigger/interface/Jet.h"
 #include "DataFormats/L1Trigger/interface/EtSum.h"
@@ -77,10 +76,6 @@ namespace l1t {
                                const edm::EDGetTokenT<BXVector<l1t::Muon>>&,
                                const bool receiveMu,
                                const int nrL1Mu);
-    void receiveMuonShowerObjectData(edm::Event&,
-                                     const edm::EDGetTokenT<BXVector<l1t::MuonShower>>&,
-                                     const bool receiveMuShower,
-                                     const int nrL1MuShower);
 
     void receiveExternalData(edm::Event&, const edm::EDGetTokenT<BXVector<GlobalExtBlk>>&, const bool receiveExt);
 
@@ -208,7 +203,6 @@ namespace l1t {
 
   private:
     BXVector<const l1t::Muon*>* m_candL1Mu;
-    BXVector<const l1t::MuonShower*>* m_candL1MuShower;
     BXVector<const l1t::L1Candidate*>* m_candL1EG;
     BXVector<const l1t::L1Candidate*>* m_candL1Tau;
     BXVector<const l1t::L1Candidate*>* m_candL1Jet;
